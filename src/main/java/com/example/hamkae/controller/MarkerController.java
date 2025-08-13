@@ -87,8 +87,8 @@ public class MarkerController {
                         String imagePath = fileUploadService.uploadImage(image);
                         uploadedImagePaths.add(imagePath);
                         
-                        // 사진을 마커에 연결
-                        markerService.addPhotoToMarker(markerId, imagePath, "REPORT", userId);
+                        // 사진을 마커에 연결 (쓰레기 제보 사진은 자동으로 BEFORE 타입)
+                        markerService.addPhotoToMarker(markerId, imagePath, "BEFORE", userId);
                     }
                 }
             }

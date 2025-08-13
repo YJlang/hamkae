@@ -186,13 +186,13 @@ public class Marker {
     }
 
     /**
-     * 마커에 제보 사진이 있는지 확인하는 메서드
+     * 마커에 제보 사진이 있는지 확인하는 메서드 (BEFORE 타입과 동일)
      * 
      * @return 제보 사진이 있으면 true
      */
     public boolean hasReportPhoto() {
         return this.photos.stream()
-                .anyMatch(photo -> photo.getType() == Photo.PhotoType.REPORT);
+                .anyMatch(photo -> photo.getType() == Photo.PhotoType.BEFORE);
     }
 
     /**
