@@ -1,33 +1,55 @@
 package com.example.hamkae.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * 웹 애플리케이션 전역 설정을 담당하는 설정 클래스
- * CORS 설정, 인터셉터 설정 등을 관리합니다.
+ * 웹 관련 설정을 담당하는 설정 클래스
+ * CORS, 파일 업로드, 정적 리소스 핸들링 등을 설정합니다.
  * 
- * @author 개발팀
+ * @author 윤준하
  * @version 1.0
- * @since 2024-12-19
+ * @since 2025-08-13
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     /**
-     * CORS(Cross-Origin Resource Sharing) 설정을 구성합니다.
-     * 프론트엔드 애플리케이션에서 백엔드 API에 접근할 수 있도록 허용합니다.
-     * 
-     * @param registry CORS 설정을 등록하는 레지스트리
+     * CORS 설정
+     * 프론트엔드 개발 서버에서의 요청을 허용합니다.
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")                    // 모든 경로에 대해 CORS 허용
-                .allowedOrigins("http://localhost:3000") // React 개발 서버 주소 허용
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 허용할 HTTP 메서드
-                .allowedHeaders("*")                   // 모든 헤더 허용
-                .allowCredentials(true)                // 쿠키, 인증 헤더 등 자격 증명 허용
-                .maxAge(3600);                        // CORS 프리플라이트 요청 캐시 시간 (1시간)
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*")  // 모든 오리진 허용 (개발 환경)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+
+    /**
+     * 정적 리소스 핸들링 설정
+     * 업로드된 이미지 파일들을 정적 리소스로 제공합니다.
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 업로드된 이미지 파일들을 /images/** 경로로 접근 가능하도록 설정
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:uploads/images/");
+    }
+
+    /**
+     * MultipartResolver 설정
+     * 파일 업로드를 위한 설정입니다.
+     */
+    @Bean
+    public MultipartResolver multipartResolver() {
+        return new StandardServletMultipartResolver();
     }
 }
