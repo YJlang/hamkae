@@ -1,6 +1,7 @@
 package com.example.hamkae.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,10 +28,10 @@ public class FileUploadService {
 
     /**
      * 업로드된 파일을 저장할 기본 디렉토리
-     * 개발 환경: 프로젝트 루트의 uploads/images/
-     * 운영 환경: 서버의 지정된 경로
+     * application.properties에서 설정값을 읽어옵니다.
      */
-    private static final String UPLOAD_DIR = "uploads/images/";
+    @Value("${app.upload.dir}")
+    private String uploadDir;
 
     /**
      * 이미지 파일을 업로드하고 저장 경로를 반환합니다.
@@ -56,9 +57,10 @@ public class FileUploadService {
         Files.copy(file.getInputStream(), filePath);
         
         // 접근 경로 반환 (웹에서 접근 가능한 경로)
-        String accessPath = "/images/" + getDatePath() + "/" + uniqueFilename;
+        String accessPath = "/images/" + getDatePathForWeb() + "/" + uniqueFilename;
         
         log.info("이미지 업로드 완료: {} -> {}", originalFilename, accessPath);
+        log.info("저장 경로: {}", filePath.toAbsolutePath());
         return accessPath;
     }
 
@@ -86,32 +88,66 @@ public class FileUploadService {
 
     /**
      * 업로드 디렉토리를 생성합니다.
+     * 기본 uploads/images 폴더와 날짜별 하위 폴더를 모두 생성합니다.
      * 
      * @return 생성된 디렉토리 경로
      * @throws IOException 디렉토리 생성 실패 시
      */
     private String createUploadDirectory() throws IOException {
+        // 1. 기본 uploads/images 폴더 생성
+        Path baseDir = Paths.get(uploadDir);
+        if (!Files.exists(baseDir)) {
+            Files.createDirectories(baseDir);
+            log.info("기본 업로드 디렉토리 생성: {}", baseDir.toAbsolutePath());
+        }
+        
+        // 2. 날짜별 하위 폴더 생성
         String datePath = getDatePath();
-        String fullPath = UPLOAD_DIR + datePath;
+        String fullPath = uploadDir + datePath;
         
         Path directory = Paths.get(fullPath);
         if (!Files.exists(directory)) {
             Files.createDirectories(directory);
+            log.info("날짜별 업로드 디렉토리 생성: {}", directory.toAbsolutePath());
         }
         
         return fullPath;
     }
 
     /**
-     * 현재 날짜를 기반으로 한 경로를 생성합니다.
-     * 예: 2025/08/13
+     * 현재 날짜를 기반으로 한 경로를 생성합니다 (운영체제 호환).
+     * Windows: 2025\08\13, Unix: 2025/08/13
      * 
      * @return 날짜 기반 경로
      */
     private String getDatePath() {
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        return now.format(formatter);
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        int day = now.getDayOfMonth();
+        
+        // 운영체제 호환 경로 생성
+        return year + File.separator + 
+               String.format("%02d", month) + File.separator + 
+               String.format("%02d", day);
+    }
+
+    /**
+     * 웹 접근용 날짜 경로를 생성합니다 (항상 / 사용).
+     * 예: 2025/08/13
+     * 
+     * @return 웹 접근용 날짜 경로
+     */
+    private String getDatePathForWeb() {
+        LocalDateTime now = LocalDateTime.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        int day = now.getDayOfMonth();
+        
+        // 웹 접근용 경로는 항상 / 사용
+        return year + "/" + 
+               String.format("%02d", month) + "/" + 
+               String.format("%02d", day);
     }
 
     /**
@@ -147,7 +183,7 @@ public class FileUploadService {
         try {
             // /images/ 경로를 제거하고 실제 파일 경로로 변환
             String relativePath = filePath.replace("/images/", "");
-            Path fullPath = Paths.get(UPLOAD_DIR, relativePath);
+            Path fullPath = Paths.get(uploadDir, relativePath);
             
             if (Files.exists(fullPath)) {
                 Files.delete(fullPath);
