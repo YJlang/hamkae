@@ -5,7 +5,8 @@
 **함께줍줍**은 안양시의 쓰레기 문제를 해결하기 위한 시민 참여형 플랫폼입니다. 시민들이 쓰레기를 발견하면 제보하고, 청소 후 인증 사진을 업로드하면 AI가 검증하여 포인트를 지급하는 시스템입니다.
 
 ### 🎯 주요 기능
-- **쓰레기 제보**: GPS 기반 위치 마커 등록
+- **쓰레기 제보**: GPS 기반 위치 마커 등록 (사진 포함)
+- **청소 인증**: 청소 완료 사진 업로드 및 자동 타입 분류
 - **AI 검증**: GPT API를 통한 청소 전후 사진 비교 검증
 - **포인트 시스템**: 검증 완료 시 포인트 적립 및 상품권 교환
 - **시민 참여**: 안양시민들의 환경 보호 활동 장려
@@ -37,7 +38,7 @@
 ### 주요 테이블
 1. **users** - 사용자 정보 및 포인트 관리
 2. **markers** - 쓰레기 위치 마커 정보
-3. **photos** - 제보/인증 사진 관리
+3. **photos** - 제보/인증 사진 관리 (BEFORE/AFTER 타입)
 4. **point_history** - 포인트 적립/사용 이력
 5. **rewards** - 상품권 교환 요청
 
@@ -61,8 +62,11 @@
 - **마커 삭제 API**: `DELETE /markers/{id}` (연관 사진 및 파일 완전 삭제)
 - **상태 관리**: active, cleaned, removed 상태 변경
 
-#### 3. 사진 관리 시스템 (2025-08-13)
-- **Photo 엔티티**: 파일명, 경로, 타입(report/before/after), 검증상태, GPT응답
+#### 3. 사진 관리 시스템 (2025-08-13) ✨ **NEW!**
+- **Photo 엔티티**: 파일명, 경로, 타입(BEFORE/AFTER), 검증상태, GPT응답
+- **자동 타입 분류**: 
+  - 마커 등록 시 사진 → 자동 `BEFORE` 타입
+  - 청소 인증 사진 → 자동 `AFTER` 타입
 - **사진 업로드**: 로컬 경로 `uploads/images/`에 저장
 - **파일 관리**: UUID 기반 고유 파일명, 날짜별 폴더 구조
 - **다중 사진 지원**: 마커당 여러 장의 사진 업로드 가능
@@ -112,11 +116,16 @@ GET    /markers/{id} - 특정 마커 조회
 DELETE /markers/{id} - 마커 삭제 (연관 사진 및 파일 완전 삭제)
 ```
 
-#### 사진 관리
+#### 사진 관리 ✨ **업데이트됨!**
 ```
-POST /photos/upload - 사진 업로드 (마커 등록 시 자동 처리)
-GET  /photos/{id}  - 특정 사진 정보 조회
+POST /photos/upload/cleanup - 청소 인증용 사진 업로드 (자동 AFTER 타입)
+GET  /photos/{id}           - 특정 사진 정보 조회
+GET  /photos/marker/{markerId} - 마커별 사진 목록 조회
 ```
+
+**📸 사진 타입 자동 분류**
+- **마커 등록 시**: 사진들이 자동으로 `BEFORE` 타입으로 저장
+- **청소 인증 시**: 사진이 자동으로 `AFTER` 타입으로 저장
 
 ---
 
@@ -140,6 +149,9 @@ CREATE DATABASE hamkae_db;
 spring.datasource.url=jdbc:mysql://localhost:3306/hamkae_db
 spring.datasource.username=root
 spring.datasource.password=wnsgk677400
+
+# 파일 업로드 경로 (Windows 개발용)
+app.upload.dir=C:/together/hamkae/uploads/images/
 ```
 
 #### 3. 애플리케이션 실행
@@ -184,6 +196,31 @@ Content-Type: application/json
 }
 ```
 
+#### 마커 등록 테스트 (사진 포함)
+```http
+POST http://localhost:8080/markers
+Authorization: Bearer {로그인에서_받은_토큰}
+Content-Type: multipart/form-data
+
+Body (form-data):
+- latitude: 37.5665
+- longitude: 126.9780
+- description: "테스트 마커입니다"
+- images: [이미지파일1.jpg] (파일 선택)
+- images: [이미지파일2.jpg] (파일 선택)
+```
+
+#### 청소 인증 사진 업로드 테스트
+```http
+POST http://localhost:8080/photos/upload/cleanup
+Authorization: Bearer {로그인에서_받은_토큰}
+Content-Type: multipart/form-data
+
+Body (form-data):
+- marker_id: 1 (마커 등록에서 받은 ID)
+- image: [청소완료사진.jpg] (파일 선택)
+```
+
 ### 예상 응답 형식
 ```json
 {
@@ -210,15 +247,30 @@ hamkae/
 │   ├── main/
 │   │   ├── java/com/example/hamkae/
 │   │   │   ├── controller/     # API 엔드포인트
+│   │   │   │   ├── AuthController.java
+│   │   │   │   ├── MarkerController.java
+│   │   │   │   └── PhotoController.java
 │   │   │   ├── service/        # 비즈니스 로직
+│   │   │   │   ├── AuthService.java
+│   │   │   │   ├── MarkerService.java
+│   │   │   │   ├── PhotoService.java
+│   │   │   │   └── FileUploadService.java
 │   │   │   ├── repository/     # 데이터 접근 계층
+│   │   │   │   ├── UserRepository.java
+│   │   │   │   ├── MarkerRepository.java
+│   │   │   │   └── PhotoRepository.java
 │   │   │   ├── domain/         # 엔티티 클래스
+│   │   │   │   ├── User.java
+│   │   │   │   ├── Marker.java
+│   │   │   │   └── Photo.java
 │   │   │   ├── DTO/            # 데이터 전송 객체
 │   │   │   └── config/         # 설정 클래스
 │   │   └── resources/
 │   │       ├── application.properties  # 데이터베이스 설정
 │   │       └── templates/
 │   └── test/                   # 테스트 코드
+├── uploads/                    # 업로드된 이미지 저장소
+│   └── images/                 # 날짜별 폴더 구조
 ├── build.gradle                # Gradle 의존성 설정
 ├── together_erd.dbml           # 데이터베이스 ERD
 ├── 함께줍줍_API명세서.md        # API 명세서
@@ -229,10 +281,11 @@ hamkae/
 
 ## 🚀 개발 우선순위
 
-### 1순위 (MVP 핵심 기능)
+### 1순위 (MVP 핵심 기능) ✅ **완료!**
 - ✅ 사용자 인증 (회원가입/로그인)
 - ✅ 마커 등록/조회/삭제
 - ✅ 사진 업로드 (다중 파일 지원)
+- ✅ 자동 사진 타입 분류 (BEFORE/AFTER)
 - 🔄 AI 검증
 
 ### 2순위 (사용자 경험)
@@ -258,10 +311,14 @@ hamkae/
 
 ## 📝 개발 일지
 
-### 2025-08-13 (오늘!)
+### 2025-08-13 (오늘!) ✨ **대폭 업데이트!**
 - ✅ 마커 관리 시스템 완전 구현 (등록/조회/삭제)
 - ✅ 사진 업로드 시스템 완전 구현 (다중 파일 지원)
-- ✅ 파일 업로드 서비스 구현 (로컬 저장, UUID 파일명)
+- ✅ **자동 사진 타입 분류 시스템 구현** (BEFORE/AFTER)
+- ✅ **청소 인증용 사진 업로드 API 구현** (`POST /photos/upload/cleanup`)
+- ✅ **PhotoController 및 PhotoService 신규 생성**
+- ✅ **PhotoRepository 신규 생성**
+- ✅ 파일 업로드 서비스 구현 (로컬 저장, UUID 파일명, 날짜별 폴더)
 - ✅ 도메인 엔티티 완전 구현 (User, Marker, Photo, PointHistory, Reward)
 - ✅ 모든 DTO 클래스 구현 완료
 - ✅ 마커 삭제 시 연관 사진 및 파일 완전 삭제 구현
