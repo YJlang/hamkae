@@ -16,14 +16,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+
 /**
- * 사용자 인증 및 사용자 정보 관련 API를 처리하는 컨트롤러
- * 회원가입, 로그인, 프로필 조회/수정 등의 기능을 제공합니다.
- * 
- * @author 권오윤
+ * 사용자 인증 관련 API를 처리하는 컨트롤러
+ * 회원가입, 로그인 등의 인증 기능을 제공합니다.
+ *
+ * @author 개발팀
  * @version 1.0
- * @since 2025-08-14
+ * @since 2024-12-19
  */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -98,6 +100,14 @@ public class AuthController {
         
         return ResponseEntity.ok(ApiResponse.success("로그인 성공", data));
     }
+
+    /**
+     * 프로필 조회/수정 등의 기능을 제공합니다.
+     *
+     * @author 권오윤
+     * @version 1.0
+     * @since 2025-08-14
+     */
 
     /**
      * 내 프로필 정보를 조회합니다.
