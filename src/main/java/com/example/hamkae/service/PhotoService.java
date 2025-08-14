@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,16 +39,16 @@ public class PhotoService {
     private final FileUploadService fileUploadService;
 
     /**
-     * 청소 인증용 사진을 업로드합니다.
+     * 청소 인증용 사진들을 업로드합니다.
      * 
      * @param markerId 마커 ID
-     * @param image 업로드할 이미지 파일
+     * @param images 업로드할 이미지 파일들
      * @param userId 업로드하는 사용자 ID
-     * @return 업로드된 사진의 ID
+     * @return 업로드된 사진들의 ID 리스트
      * @throws RuntimeException 마커나 사용자를 찾을 수 없는 경우
      */
     @Transactional
-    public Long uploadCleanupPhoto(Long markerId, MultipartFile image, Long userId) {
+    public List<Long> uploadCleanupPhotos(Long markerId, MultipartFile[] images, Long userId) {
         // 마커 존재 여부 확인
         Marker marker = markerRepository.findById(markerId)
                 .orElseThrow(() -> new RuntimeException("마커를 찾을 수 없습니다."));
@@ -59,29 +60,43 @@ public class PhotoService {
         // 청소 인증용 사진은 무조건 AFTER 타입
         Photo.PhotoType photoType = Photo.PhotoType.AFTER;
         
+        List<Long> photoIds = new ArrayList<>();
+        
         try {
-            // 이미지 파일 업로드
-            String imagePath = fileUploadService.uploadImage(image);
+            if (images != null && images.length > 0) {
+                for (MultipartFile image : images) {
+                    if (!image.isEmpty()) {
+                        // 이미지 파일 업로드
+                        String imagePath = fileUploadService.uploadImage(image);
+                        
+                        // Photo 엔티티 생성
+                        Photo photo = Photo.builder()
+                                .marker(marker)
+                                .user(user)
+                                .imagePath(imagePath)
+                                .type(photoType)
+                                .build();
+                        
+                        // 사진 저장
+                        Photo savedPhoto = photoRepository.save(photo);
+                        photoIds.add(savedPhoto.getId());
+                        
+                        // 마커에 사진 추가 (양방향 관계 설정)
+                        marker.addPhoto(savedPhoto);
+                        
+                        log.info("청소 인증용 사진 업로드 완료: markerId={}, type=AFTER, photoId={}", 
+                                markerId, savedPhoto.getId());
+                    }
+                }
+                
+                // 마커 저장 (양방향 관계 설정)
+                markerRepository.save(marker);
+            }
             
-            // Photo 엔티티 생성
-            Photo photo = Photo.builder()
-                    .marker(marker)
-                    .user(user)
-                    .imagePath(imagePath)
-                    .type(photoType)
-                    .build();
+            log.info("청소 인증용 사진들 업로드 완료: markerId={}, type=AFTER, count={}", 
+                    markerId, photoIds.size());
             
-            // 사진 저장
-            Photo savedPhoto = photoRepository.save(photo);
-            
-            // 마커에 사진 추가 (양방향 관계 설정)
-            marker.addPhoto(savedPhoto);
-            markerRepository.save(marker);
-            
-            log.info("청소 인증용 사진 업로드 완료: markerId={}, type=AFTER, photoId={}", 
-                    markerId, savedPhoto.getId());
-            
-            return savedPhoto.getId();
+            return photoIds;
             
         } catch (IOException e) {
             log.error("이미지 파일 업로드 실패: markerId={}, photoType=AFTER", markerId, e);

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,14 +36,14 @@ public class PhotoController {
      * 마커를 클릭한 후 청소 완료 사진을 업로드할 때 사용합니다.
      * 
      * @param markerId 마커 ID
-     * @param image 업로드할 이미지 파일
+     * @param images 업로드할 이미지 파일들
      * @param authorization JWT 인증 토큰
      * @return 업로드된 사진 정보
      */
     @PostMapping("/upload/cleanup")
     public ResponseEntity<ApiResponse<Map<String, Object>>> uploadCleanupPhoto(
             @RequestParam("marker_id") Long markerId,
-            @RequestParam("image") MultipartFile image,
+            @RequestParam(value = "images", required = false) MultipartFile[] images,
             @RequestHeader(value = "Authorization", required = false) String authorization) {
         
         // 인증 토큰 검증
@@ -64,14 +65,15 @@ public class PhotoController {
         }
 
         try {
-            // 청소 인증용 사진 업로드 (자동으로 AFTER 타입)
-            Long photoId = photoService.uploadCleanupPhoto(markerId, image, userId);
+            // 청소 인증용 사진들 업로드 (자동으로 AFTER 타입)
+            List<Long> photoIds = photoService.uploadCleanupPhotos(markerId, images, userId);
             
             // 응답 데이터 구성
             Map<String, Object> data = new HashMap<>();
-            data.put("photo_id", photoId);
+            data.put("photo_ids", photoIds);
             data.put("marker_id", markerId);
             data.put("type", "AFTER");
+            data.put("count", photoIds.size());
             data.put("message", "청소 인증용 사진 업로드 완료");
             
             return ResponseEntity.ok(ApiResponse.success("청소 인증용 사진 업로드 완료", data));
