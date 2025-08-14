@@ -97,9 +97,8 @@ public class Photo {
      * 사진 타입을 나타내는 열거형
      */
     public enum PhotoType {
-        REPORT,     // 제보용 사진
-        BEFORE,     // 청소 전 사진
-        AFTER       // 청소 후 사진
+        BEFORE,     // 청소 전 사진 (쓰레기 제보용)
+        AFTER       // 청소 후 사진 (청소 인증용)
     }
 
     /**
@@ -163,12 +162,12 @@ public class Photo {
     }
 
     /**
-     * 사진이 제보용인지 확인하는 메서드
+     * 사진이 제보용인지 확인하는 메서드 (BEFORE 타입과 동일)
      * 
      * @return 제보용 사진이면 true
      */
     public boolean isReport() {
-        return this.type == PhotoType.REPORT;
+        return this.type == PhotoType.BEFORE;
     }
 
     /**
