@@ -186,4 +186,13 @@ public class User {
     public void addReward(Reward reward) {
         this.rewards.add(reward);
     }
+
+    /**
+     * 사용자 이름을 변경합니다.
+     * 
+     * @param newName 새로운 사용자 이름
+     */
+    public void updateName(String newName) {
+        this.name = newName;
+    }
 }
