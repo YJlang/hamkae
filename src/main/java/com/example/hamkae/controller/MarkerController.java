@@ -7,6 +7,7 @@ import com.example.hamkae.config.JwtUtil;
 import com.example.hamkae.repository.UserRepository;
 import com.example.hamkae.service.FileUploadService;
 import com.example.hamkae.service.MarkerService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
 
 /**
  * 마커 관련 API를 처리하는 컨트롤러 클래스
@@ -27,6 +30,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/markers")
+
 public class MarkerController {
 
     private final MarkerService markerService;
@@ -45,6 +49,7 @@ public class MarkerController {
      * @return 등록된 마커의 ID와 사진 정보
      */
     @PostMapping
+
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerMarker(
             @RequestParam("lat") String lat,
             @RequestParam("lng") String lng,
@@ -111,6 +116,7 @@ public class MarkerController {
      * @return 활성 상태의 마커 목록
      */
     @GetMapping
+
     public ResponseEntity<ApiResponse<List<MarkerResponseDTO>>> getAllActiveMarkers() {
         List<MarkerResponseDTO> markers = markerService.getAllActiveMarkers();
         return ResponseEntity.ok(ApiResponse.success("마커 조회 완료", markers));
@@ -123,7 +129,9 @@ public class MarkerController {
      * @return 마커 상세 정보
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<MarkerResponseDTO>> getMarkerById(@PathVariable Long id) {
+
+    public ResponseEntity<ApiResponse<MarkerResponseDTO>> getMarkerById(
+            @PathVariable Long id) {
         MarkerResponseDTO marker = markerService.getMarkerById(id);
         return ResponseEntity.ok(ApiResponse.success("마커 상세 조회 완료", marker));
     }
@@ -135,7 +143,9 @@ public class MarkerController {
      * @return 해당 사용자가 제보한 마커 목록
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<MarkerResponseDTO>>> getMarkersByUserId(@PathVariable Long userId) {
+
+    public ResponseEntity<ApiResponse<List<MarkerResponseDTO>>> getMarkersByUserId(
+            @PathVariable Long userId) {
         List<MarkerResponseDTO> markers = markerService.getMarkersByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("사용자별 마커 조회 완료", markers));
     }
@@ -148,6 +158,7 @@ public class MarkerController {
      * @return 삭제 완료 메시지
      */
     @DeleteMapping("/{id}")
+
     public ResponseEntity<ApiResponse<String>> deleteMarker(
             @PathVariable Long id,
             @RequestHeader(value = "Authorization", required = false) String authorization) {

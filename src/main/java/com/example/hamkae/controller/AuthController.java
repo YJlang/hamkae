@@ -6,6 +6,11 @@ import com.example.hamkae.DTO.ApiResponse;
 import com.example.hamkae.DTO.LoginRequestDTO;
 import com.example.hamkae.DTO.RegisterRequestDTO;
 import com.example.hamkae.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +32,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
+@Tag(name = "인증 API", description = "사용자 회원가입 및 로그인 관련 API")
 public class AuthController {
 
     /**
@@ -46,6 +52,22 @@ public class AuthController {
      * @return 회원가입 결과 (성공 시 user_id 포함)
      */
     @PostMapping("/register")
+    @Operation(
+        summary = "회원가입",
+        description = "새로운 사용자를 등록합니다. 이름, 아이디, 비밀번호가 필요합니다."
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", 
+            description = "회원가입 성공",
+            content = @Content(schema = @Schema(implementation = ApiResponse.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", 
+            description = "잘못된 요청 (중복 아이디 등)",
+            content = @Content(schema = @Schema(implementation = ApiResponse.class))
+        )
+    })
     public ResponseEntity<ApiResponse<Map<String, Object>>> register(@RequestBody RegisterRequestDTO request) {
         try {
             // 사용자 등록 처리
@@ -69,6 +91,22 @@ public class AuthController {
      * @return 로그인 결과 (성공 시 JWT 토큰과 사용자 정보 포함)
      */
     @PostMapping("/login")
+    @Operation(
+        summary = "로그인",
+        description = "사용자 아이디와 비밀번호로 로그인하여 JWT 토큰을 발급받습니다."
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", 
+            description = "로그인 성공",
+            content = @Content(schema = @Schema(implementation = ApiResponse.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", 
+            description = "인증 실패 (잘못된 아이디/비밀번호)",
+            content = @Content(schema = @Schema(implementation = ApiResponse.class))
+        )
+    })
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginRequestDTO request) {
         // 사용자 정보 검증
         User user = userService.validateUser(request.getUsername(), request.getPassword());
