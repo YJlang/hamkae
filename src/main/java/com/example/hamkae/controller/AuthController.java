@@ -1,17 +1,13 @@
 package com.example.hamkae.controller;
 
+import com.example.hamkae.DTO.*;
 import com.example.hamkae.config.JwtUtil;
 import com.example.hamkae.domain.User;
-import com.example.hamkae.DTO.ApiResponse;
-import com.example.hamkae.DTO.LoginRequestDTO;
-import com.example.hamkae.DTO.RegisterRequestDTO;
+import com.example.hamkae.repository.UserRepository;
 import com.example.hamkae.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +31,7 @@ public class AuthController {
      * 사용자 관련 비즈니스 로직을 처리하는 서비스
      */
     private final UserService userService;
+    private final UserRepository userRepository;
     
     /**
      * JWT 토큰 생성 및 검증을 위한 유틸리티
