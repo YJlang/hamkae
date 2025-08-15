@@ -41,5 +41,14 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
      * @param type 사진 타입
      * @return 해당 마커의 특정 타입 사진 목록
      */
+    List<Photo> findByMarkerIdAndType(Long markerId, Photo.PhotoType type);
 
+    /**
+     * 특정 마커의 특정 검증 상태 사진들을 조회합니다.
+     * 
+     * @param markerId 마커 ID
+     * @param verificationStatus 검증 상태
+     * @return 해당 마커의 특정 검증 상태 사진 목록
+     */
+    List<Photo> findByMarkerIdAndVerificationStatus(Long markerId, Photo.VerificationStatus verificationStatus);
 }
