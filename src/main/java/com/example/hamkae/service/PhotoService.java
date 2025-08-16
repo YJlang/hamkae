@@ -39,6 +39,7 @@ public class PhotoService {
     private final UserRepository userRepository;
     private final FileUploadService fileUploadService;
     private final GptVerificationService gptVerificationService;
+    private final ImageValidationService imageValidationService;
 
     /**
      * 청소 인증용 사진들을 업로드하고 AI 검증을 수행합니다.
@@ -68,10 +69,17 @@ public class PhotoService {
             if (images != null && images.length > 0) {
                 for (MultipartFile image : images) {
                     if (!image.isEmpty()) {
-                        // 이미지 파일 업로드
+                        // 1단계: 이미지 품질 검증
+                        imageValidationService.validateImageQuality(image);
+                        
+                        // 2단계: 중복 업로드 검증
+                        int existingPhotos = photoRepository.countByMarkerIdAndType(markerId, photoType);
+                        imageValidationService.validateDuplicateUpload(markerId, photoType.name(), userId, existingPhotos);
+                        
+                        // 3단계: 이미지 파일 업로드
                         String imagePath = fileUploadService.uploadImage(image);
                         
-                        // Photo 엔티티 생성
+                        // 4단계: Photo 엔티티 생성
                         Photo photo = Photo.builder()
                                 .marker(marker)
                                 .user(user)
@@ -79,11 +87,11 @@ public class PhotoService {
                                 .type(photoType)
                                 .build();
                         
-                        // 사진 저장
+                        // 5단계: 사진 저장
                         Photo savedPhoto = photoRepository.save(photo);
                         photoIds.add(savedPhoto.getId());
                         
-                        // 마커에 사진 추가 (양방향 관계 설정)
+                        // 6단계: 마커에 사진 추가 (양방향 관계 설정)
                         marker.addPhoto(savedPhoto);
                         
                         log.info("청소 인증용 사진 업로드 완료: markerId={}, type=AFTER, photoId={}", 
