@@ -218,7 +218,7 @@ Content-Type: multipart/form-data
 
 Body (form-data):
 - marker_id: 1 (마커 등록에서 받은 ID)
-- image: [청소완료사진.jpg] (파일 선택)
+- images: [청소완료사진.jpg] (파일 선택)
 ```
 
 ### 예상 응답 형식
