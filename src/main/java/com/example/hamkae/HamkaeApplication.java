@@ -3,6 +3,7 @@ package com.example.hamkae;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * 함께줍줍 프로젝트 메인 애플리케이션 클래스
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  */
 @SpringBootApplication
 @EnableJpaAuditing // JPA Auditing 기능 활성화 (생성일시, 수정일시 자동 관리)
+@EnableAsync // 비동기 처리 활성화 (AI 검증 백그라운드 실행)
 public class HamkaeApplication {
 
     /**

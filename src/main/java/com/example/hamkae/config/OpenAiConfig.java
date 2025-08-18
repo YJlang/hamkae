@@ -4,6 +4,9 @@ import com.theokanning.openai.service.OpenAiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 
@@ -32,5 +35,17 @@ public class OpenAiConfig {
     @Bean
     public OpenAiService openAiService() {
         return new OpenAiService(apiKey, Duration.ofMillis(timeout));
+    }
+
+    /**
+     * OpenAI HTTP 클라이언트 (멀티모달 호출용)
+     */
+    @Bean
+    public WebClient openAiWebClient() {
+        return WebClient.builder()
+                .baseUrl("https://api.openai.com")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 }
