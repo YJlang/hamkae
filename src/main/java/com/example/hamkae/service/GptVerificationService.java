@@ -1,15 +1,13 @@
 package com.example.hamkae.service;
 
-import com.example.hamkae.DTO.GptVerificationRequestDTO;
 import com.example.hamkae.DTO.GptVerificationResponseDTO;
 import com.example.hamkae.domain.Photo;
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.service.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import javax.imageio.ImageIO;
 
 /**
@@ -33,13 +30,13 @@ import javax.imageio.ImageIO;
 @RequiredArgsConstructor
 public class GptVerificationService {
 
-    private final OpenAiService openAiService;
+    private final WebClient openAiWebClient;
     private final ImageValidationService imageValidationService;
 
     @Value("${openai.api.model:gpt-4o}")
     private String modelName;
 
-    @Value("${openai.api.max-tokens:1500}")
+    @Value("${openai.api.max-tokens:800}")
     private Integer maxTokens;
 
     @Value("${ai.verification.points.reward:100}")
@@ -47,6 +44,9 @@ public class GptVerificationService {
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
+
+    @Value("${ai.verification.min-interval-minutes:1}")
+    private Integer minIntervalMinutes;
 
     /**
      * 사진 비교 검증을 수행합니다.
@@ -69,8 +69,8 @@ public class GptVerificationService {
             // 3단계: 시간 간격 검증
             validateTimeInterval(beforePhoto, afterPhoto);
             
-            // 4단계: GPT Vision API 검증
-            String gptResponse = callGptVisionApi(beforePhoto, afterPhoto);
+            // 4단계: GPT Vision API 검증 (멀티모달 Base64)
+            String gptResponse = callGptVisionJson(beforePhoto, afterPhoto);
             
             // 5단계: 응답 파싱 및 결과 생성
             GptVerificationResponseDTO result = parseGptResponse(gptResponse);
@@ -126,18 +126,17 @@ public class GptVerificationService {
      * @throws IllegalArgumentException 시간 간격이 부적절한 경우
      */
     private void validateTimeInterval(Photo beforePhoto, Photo afterPhoto) {
-        // 테스트 환경을 위해 시간 간격 검증을 일시적으로 비활성화
-        // TODO: 실제 운영 환경에서는 아래 주석을 해제하여 시간 간격 검증 활성화
-        /*
-        // 청소 전후 사진의 시간 간격이 너무 짧지 않은지 확인 (최소 1분)
-        long timeDiff = java.time.Duration.between(beforePhoto.getCreatedAt(), afterPhoto.getCreatedAt()).toMinutes();
-        if (timeDiff < 1) {
-            throw new IllegalArgumentException("청소 전후 사진의 시간 간격이 너무 짧습니다. 최소 1분 이상의 간격이 필요합니다.");
+        // minIntervalMinutes <= 0 이면 테스트/개발 환경에서 시간 간격 검증 비활성화
+        if (minIntervalMinutes == null || minIntervalMinutes <= 0) {
+            log.debug("시간 간격 검증 비활성화 (minIntervalMinutes={})", minIntervalMinutes);
+            return;
         }
-        log.debug("시간 간격 검증 완료: {}분", timeDiff);
-        */
-        
-        log.debug("테스트 환경: 시간 간격 검증 건너뜀");
+
+        long timeDiff = java.time.Duration.between(beforePhoto.getCreatedAt(), afterPhoto.getCreatedAt()).toMinutes();
+        if (timeDiff < minIntervalMinutes) {
+            throw new IllegalArgumentException("청소 전후 사진의 시간 간격이 너무 짧습니다. 최소 " + minIntervalMinutes + "분 이상이어야 합니다.");
+        }
+        log.debug("시간 간격 검증 완료: {}분 (최소 {}분)", timeDiff, minIntervalMinutes);
     }
 
     /**
@@ -194,71 +193,75 @@ public class GptVerificationService {
      * @param afterPhoto 청소 후 사진
      * @return GPT API 응답
      */
-    private String callGptVisionApi(Photo beforePhoto, Photo afterPhoto) {
+    private String callGptVisionJson(Photo beforePhoto, Photo afterPhoto) {
         try {
-            // 이미지 메타데이터 분석
-            ImageMetadata beforeMetadata = analyzeImageMetadata(beforePhoto);
-            ImageMetadata afterMetadata = analyzeImageMetadata(afterPhoto);
-            
-            log.info("이미지 메타데이터 분석 완료 - 전: {}x{}, 후: {}x{}", 
-                    beforeMetadata.width, beforeMetadata.height, 
-                    afterMetadata.width, afterMetadata.height);
-            
-            // 스마트 검증을 위한 프롬프트 생성
-            StringBuilder prompt = new StringBuilder();
-            prompt.append("당신은 환경 정리 전문가입니다. 다음 이미지 메타데이터를 분석하여 쓰레기 청소 여부를 판단해주세요.\n\n");
-            
-            prompt.append("청소 전 이미지 정보:\n");
-            prompt.append("- 파일명: ").append(beforePhoto.getImagePath()).append("\n");
-            prompt.append("- 촬영 시간: ").append(beforePhoto.getCreatedAt()).append("\n");
-            prompt.append("- 파일 크기: ").append(beforeMetadata.fileSize).append(" bytes\n");
-            prompt.append("- 해상도: ").append(beforeMetadata.width).append("x").append(beforeMetadata.height).append("\n");
-            prompt.append("- 이미지 품질: ").append(beforeMetadata.quality).append("\n");
-            prompt.append("- 이미지 특성: ").append(beforeMetadata.contentAnalysis).append("\n\n");
-            
-            prompt.append("청소 후 이미지 정보:\n");
-            prompt.append("- 파일명: ").append(afterPhoto.getImagePath()).append("\n");
-            prompt.append("- 촬영 시간: ").append(afterPhoto.getCreatedAt()).append("\n");
-            prompt.append("- 파일 크기: ").append(afterMetadata.fileSize).append(" bytes\n");
-            prompt.append("- 해상도: ").append(afterMetadata.width).append("x").append(afterMetadata.height).append("\n");
-            prompt.append("- 이미지 품질: ").append(afterMetadata.quality).append("\n");
-            prompt.append("- 이미지 특성: ").append(afterMetadata.contentAnalysis).append("\n\n");
-            
-            prompt.append("시간 간격: ").append(calculateTimeInterval(beforePhoto, afterPhoto)).append("분\n\n");
-            
-            // 이미지 간 차이점 분석
-            ImageDifference difference = analyzeImageDifference(beforeMetadata, afterMetadata);
-            prompt.append("이미지 간 차이점 분석:\n");
-            prompt.append("- 파일 크기 변화: ").append(difference.sizeChange).append("%\n");
-            prompt.append("- 해상도 변화: ").append(difference.resolutionChange).append("\n");
-            prompt.append("- 품질 변화: ").append(difference.qualityChange).append("\n");
-            prompt.append("- 특성 변화: ").append(difference.contentChange).append("\n\n");
-            
-            prompt.append("이미지 분석 지침:\n");
-            prompt.append(createVisionPrompt(beforePhoto, afterPhoto));
-            
-            prompt.append("\n\n**중요**: 이미지 메타데이터를 기반으로 청소 전후 차이를 판단하세요. ");
-            prompt.append("시간 간격, 파일 크기 변화, 해상도 등을 종합적으로 고려하여 판단하세요.");
-            
-            // GPT API 호출
-            ChatMessage message = new ChatMessage("user", prompt.toString());
-            
-            ChatCompletionRequest request = ChatCompletionRequest.builder()
-                    .model(modelName)
-                    .messages(List.of(message))
-                    .maxTokens(maxTokens)
-                    .temperature(0.2)
-                    .build();
+            String beforeBase64 = imageValidationService.encodeImageToBase64(beforePhoto.getImagePath());
+            String afterBase64 = imageValidationService.encodeImageToBase64(afterPhoto.getImagePath());
 
-            String response = openAiService.createChatCompletion(request)
-                    .getChoices().get(0).getMessage().getContent();
-            
-            log.debug("GPT API 응답 (메타데이터 기반): {}", response);
-            return response;
+            String systemPrompt = "당신은 환경 정리 검증 전문가입니다. 두 이미지를 비교해 실제로 쓰레기가 정리되었는지 판단하세요. 반드시 JSON만 반환하세요.";
+            String userText = "BEFORE와 AFTER 이미지를 비교하여 다음 스키마로만 응답하세요. {\\n" +
+                    "  \"verification_result\": \"APPROVED|REJECTED\",\\n" +
+                    "  \"confidence\": 0.0~1.0,\\n" +
+                    "  \"reason\": \"핵심 근거\"\\n" +
+                    "}";
+
+            var payload = java.util.Map.of(
+                    "model", modelName,
+                    "temperature", 0,
+                    "max_tokens", maxTokens,
+                    "response_format", java.util.Map.of("type", "json_object"),
+                    "messages", java.util.List.of(
+                            java.util.Map.of("role", "system", "content", systemPrompt),
+                            java.util.Map.of(
+                                    "role", "user",
+                                    "content", java.util.List.of(
+                                            java.util.Map.of("type", "text", "text", userText),
+                                            java.util.Map.of("type", "image_url", "image_url", java.util.Map.of(
+                                                    "url", "data:image/jpeg;base64," + beforeBase64,
+                                                    "detail", "low"
+                                            )),
+                                            java.util.Map.of("type", "image_url", "image_url", java.util.Map.of(
+                                                    "url", "data:image/jpeg;base64," + afterBase64,
+                                                    "detail", "low"
+                                            ))
+                                    )
+                            )
+                    )
+            );
+
+            var response = openAiWebClient.post()
+                    .uri("/v1/chat/completions")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(payload)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            // 매우 단순 파싱: choices[0].message.content 을 추출
+            String content = extractJsonContentFromChatCompletions(response);
+            log.debug("GPT Vision 응답(JSON): {}", content);
+            return content;
 
         } catch (Exception e) {
-            log.error("GPT API 호출 중 오류 발생", e);
-            throw new RuntimeException("GPT API 호출 실패: " + e.getMessage(), e);
+            log.error("GPT Vision 호출 실패", e);
+            throw new RuntimeException("GPT Vision 호출 실패: " + e.getMessage(), e);
+        }
+    }
+
+    private String extractJsonContentFromChatCompletions(String raw) {
+        try {
+            // 매우 단순한 문자열 추출 (프로덕션에선 JSON 파서 사용 권장)
+            int contentIdx = raw.indexOf("\"content\":");
+            if (contentIdx == -1) return raw;
+            int firstQuote = raw.indexOf('"', contentIdx + 10);
+            int lastQuote = raw.lastIndexOf('"');
+            if (firstQuote == -1 || lastQuote == -1 || lastQuote <= firstQuote) return raw;
+            String extracted = raw.substring(firstQuote + 1, lastQuote)
+                    .replace("\\n", "\n")
+                    .replace("\\\"", "\"");
+            return extracted;
+        } catch (Exception e) {
+            return raw;
         }
     }
 
@@ -445,28 +448,7 @@ public class GptVerificationService {
      * @param prompt 전달할 프롬프트
      * @return GPT API 응답
      */
-    private String callGptApi(String prompt) {
-        try {
-            ChatMessage message = new ChatMessage("user", prompt);
-            
-            ChatCompletionRequest request = ChatCompletionRequest.builder()
-                    .model(modelName)
-                    .messages(List.of(message))
-                    .maxTokens(maxTokens)
-                    .temperature(0.2) // 더 정확한 판단을 위해 온도 낮춤
-                    .build();
-
-            String response = openAiService.createChatCompletion(request)
-                    .getChoices().get(0).getMessage().getContent();
-            
-            log.debug("GPT API 응답: {}", response);
-            return response;
-
-        } catch (Exception e) {
-            log.error("GPT API 호출 중 오류 발생", e);
-            throw new RuntimeException("GPT API 호출 실패: " + e.getMessage(), e);
-        }
-    }
+    // 이전 텍스트 전용 호출 메서드는 제거 (멀티모달로 대체)
 
     /**
      * GPT API 응답을 파싱하여 검증 결과를 생성합니다.
@@ -521,9 +503,9 @@ public class GptVerificationService {
             return "REJECTED";
         }
         
-        // 기본값 - 메타데이터에 변화가 있으면 APPROVED 권장
-        log.warn("검증 결과를 추출할 수 없어 메타데이터 기반으로 판단");
-        return "APPROVED"; // 사용자 신뢰성 고려
+        // 파싱 실패 시 기본값: REJECTED (안전 우선)
+        log.warn("검증 결과를 추출할 수 없어 기본값(REJECTED) 반환");
+        return "REJECTED";
     }
 
     /**
