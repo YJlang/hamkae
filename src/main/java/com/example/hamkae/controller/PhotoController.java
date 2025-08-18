@@ -38,7 +38,7 @@ public class PhotoController {
      * 마커를 클릭한 후 청소 완료 사진을 업로드할 때 사용합니다.
      * 
      * @param markerId 마커 ID
-     * @param images 업로드할 이미지 파일들
+     * @param images 업로드할 이미지 파일들 (form-data의 'images' 키로 전송)
      * @param authorization JWT 인증 토큰
      * @return 업로드된 사진 정보
      */

@@ -50,6 +50,9 @@ dependencies {
     
     // HTTP 클라이언트 (OpenAI API 호출용)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    
+    // 이미지 처리 (Java AWT)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
 }
 
