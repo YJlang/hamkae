@@ -150,6 +150,15 @@ public class User {
     }
 
     /**
+     * 포인트를 직접 설정하는 메서드 (테스트/관리자용)
+     * 
+     * @param points 설정할 포인트 수량
+     */
+    public void setPoints(Integer points) {
+        this.points = points;
+    }
+
+    /**
      * 마커를 제보하는 메서드
      * 
      * @param marker 제보할 마커

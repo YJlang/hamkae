@@ -65,4 +65,26 @@ public class UserService {
                 .filter(user -> passwordEncoder.matches(password, user.getPassword()))
                 .orElse(null);
     }
+
+    /**
+     * 사용자명으로 사용자를 조회합니다.
+     * 
+     * @param username 조회할 사용자명
+     * @return 사용자 정보
+     * @throws RuntimeException 사용자를 찾을 수 없는 경우
+     */
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + username));
+    }
+
+    /**
+     * 사용자 정보를 저장합니다.
+     * 
+     * @param user 저장할 사용자 정보
+     * @return 저장된 사용자 정보
+     */
+    public User save(User user) {
+        return userRepository.save(user);
+    }
 }
