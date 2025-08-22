@@ -251,6 +251,59 @@ public class RewardPinController {
     }
 
     /**
+     * 현재 사용자의 특정 핀번호 전체 정보를 조회합니다 (보안용).
+     * 
+     * @param authorization JWT 토큰
+     * @param pinId 조회할 핀번호 ID
+     * @return 전체 핀번호 정보
+     */
+    @GetMapping("/{pinId}/full")
+    @Operation(summary = "핀번호 전체 정보 조회", description = "본인의 특정 핀번호 전체 정보를 조회합니다. 보안을 위해 신중하게 사용하세요.")
+    public ResponseEntity<ApiResponse<RewardPinResponseDTO>> getFullPinInfo(
+            @Parameter(description = "JWT 토큰", required = true)
+            @RequestHeader("Authorization") String authorization,
+            @Parameter(description = "핀번호 ID", required = true)
+            @PathVariable Long pinId) {
+        
+        try {
+            String token = authorization.replace("Bearer ", "");
+            String username = jwtUtil.validateAndGetUsername(token);
+            User user = userService.findByUsername(username);
+            
+            Optional<RewardPin> pin = rewardPinService.getPinById(pinId);
+            if (pin.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("핀번호를 찾을 수 없습니다"));
+            }
+            
+            RewardPin rewardPin = pin.get();
+            
+            // 본인의 핀번호인지 확인
+            if (!rewardPin.getReward().getUser().getId().equals(user.getId())) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("본인의 핀번호만 조회할 수 있습니다"));
+            }
+            
+            // 사용 가능한 핀번호인지 확인
+            if (!rewardPin.isAvailable()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("사용할 수 없는 핀번호입니다"));
+            }
+            
+            log.info("핀번호 전체 정보 조회: pinId={}, username={}", pinId, username);
+            
+            RewardPinResponseDTO response = RewardPinResponseDTO.withFullPin(rewardPin);
+            
+            return ResponseEntity.ok(ApiResponse.success("핀번호 전체 정보 조회 성공", response));
+            
+        } catch (Exception e) {
+            log.error("핀번호 전체 정보 조회 실패: pinId={}", pinId, e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("핀번호 전체 정보 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+
+    /**
      * 특정 기간의 핀번호 발급 통계를 조회합니다.
      * 
      * @param authorization JWT 토큰

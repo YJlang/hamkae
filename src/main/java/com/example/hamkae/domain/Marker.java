@@ -60,6 +60,13 @@ public class Marker {
     private String description;
 
     /**
+     * 쓰레기 위치의 실제 주소
+     * 예: "서울시 강남구 테헤란로 123", "경기도 성남시 분당구 정자로 123" 등
+     */
+    @Column(columnDefinition = "TEXT")
+    private String address;
+
+    /**
      * 마커의 현재 상태
      * active: 활성 상태 (청소 대기)
      * cleaned: 청소 완료

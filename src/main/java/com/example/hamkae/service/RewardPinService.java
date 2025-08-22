@@ -184,6 +184,17 @@ public class RewardPinService {
     }
 
     /**
+     * ID로 핀번호를 조회합니다.
+     * 
+     * @param pinId 조회할 핀번호 ID
+     * @return 핀번호 정보 (Optional)
+     */
+    public Optional<RewardPin> getPinById(Long pinId) {
+        log.debug("ID로 핀번호 조회: pinId={}", pinId);
+        return rewardPinRepository.findById(pinId);
+    }
+
+    /**
      * 만료된 핀번호를 조회합니다.
      * 
      * @return 만료된 핀번호 목록
