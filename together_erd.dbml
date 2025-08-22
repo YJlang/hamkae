@@ -1,12 +1,15 @@
 // Use DBML to define your database structure
 // Docs: https://dbml.dbdiagram.io/docs
+// LikeLion SKU 13th Hackthon Team3
 // 함께줍줍 프로젝트 ERD - 안양시 쓰레기 문제 해결을 위한 시민 참여형 플랫폼
+// 최종 업데이트: 2025-08-15
 
 // 사용자 테이블 - 플랫폼 사용자 정보
 Table users {
-  id integer [primary key, increment]
+  id bigint [primary key, increment]
   name varchar(100) [not null, note: '사용자 이름']
-  email varchar(255) [not null, unique, note: '사용자 이메일 (로그인용)']
+  username varchar(100) [not null, unique, note: '사용자 아이디 (로그인용)']
+  password varchar(255) [not null, note: '암호화된 비밀번호']
   points integer [default: 0, note: '보유 포인트']
   created_at timestamp [default: `now()`, note: '가입일시']
   updated_at timestamp [default: `now()`, note: '수정일시']
@@ -14,50 +17,70 @@ Table users {
 
 // 마커 테이블 - 쓰레기 위치 정보
 Table markers {
-  id integer [primary key, increment]
+  id bigint [primary key, increment]
   lat decimal(10, 8) [not null, note: '위도']
   lng decimal(11, 8) [not null, note: '경도']
+  address varchar(500) [note: '실제 주소 정보']
   description text [note: '쓰레기 위치 설명']
   status varchar(20) [default: 'active', note: '마커 상태 (active: 활성, cleaned: 청소됨, removed: 삭제됨)']
+  reported_by bigint [not null, note: '제보자 ID']
   created_at timestamp [default: `now()`, note: '등록일시']
   updated_at timestamp [default: `now()`, note: '수정일시']
 }
 
 // 사진 테이블 - 업로드된 사진 정보
 Table photos {
-  id integer [primary key, increment]
-  marker_id integer [not null, note: '연결된 마커 ID']
-  user_id integer [not null, note: '업로드한 사용자 ID']
-  image_path varchar(500) [not null, note: '이미지 파일 경로']
-  type varchar(20) [not null, note: '사진 타입 (before: 청소 전, after: 청소 후)']
+  id bigint [primary key, increment]
+  marker_id bigint [not null, note: '연결된 마커 ID']
+  user_id bigint [not null, note: '업로드한 사용자 ID']
+  filename varchar(255) [not null, note: '파일명']
+  file_path varchar(500) [not null, note: '이미지 파일 경로']
+  type varchar(20) [not null, note: '사진 타입 (BEFORE: 청소 전, AFTER: 청소 후)']
   verification_status varchar(20) [default: 'pending', note: '검증 상태 (pending: 대기중, approved: 승인됨, rejected: 거부됨)']
   gpt_response text [note: 'GPT API 응답 결과']
   created_at timestamp [default: `now()`, note: '업로드일시']
+  updated_at timestamp [default: `now()`, note: '수정일시']
 }
 
 // 포인트 이력 테이블 - 포인트 적립/사용 내역
 Table point_history {
-  id integer [primary key, increment]
-  user_id integer [not null, note: '사용자 ID']
+  id bigint [primary key, increment]
+  user_id bigint [not null, note: '사용자 ID']
   points integer [not null, note: '변동 포인트 (양수: 적립, 음수: 사용)']
-  type varchar(20) [not null, note: '포인트 타입 (earned: 적립, used: 사용)']
+  type varchar(20) [not null, note: '포인트 타입 (EARNED: 적립, USED: 사용)']
   description text [note: '포인트 변동 사유']
-  related_photo_id integer [note: '관련 사진 ID (적립 시)']
+  related_photo_id bigint [note: '관련 사진 ID (적립 시)']
   created_at timestamp [default: `now()`, note: '변동일시']
+  updated_at timestamp [default: `now()`, note: '수정일시']
 }
 
-// 상품권 교환 테이블 - 포인트를 상품권으로 교환 요청
+// 상품권 교환 테이블 - 포인트를 상품권으로 교환
 Table rewards {
-  id integer [primary key, increment]
-  user_id integer [not null, note: '요청 사용자 ID']
+  id bigint [primary key, increment]
+  user_id bigint [not null, note: '요청 사용자 ID']
   points_used integer [not null, note: '사용한 포인트']
-  reward_type varchar(50) [not null, note: '상품권 타입 (예: 스타벅스, 상품권 등)']
-  status varchar(20) [default: 'pending', note: '처리 상태 (pending: 대기중, approved: 승인됨, rejected: 거부됨)']
+  reward_type varchar(50) [not null, note: '상품권 타입 (FIVE_THOUSAND: 5천원, TEN_THOUSAND: 1만원, THIRTY_THOUSAND: 3만원)']
+  status varchar(20) [default: 'APPROVED', note: '처리 상태 (APPROVED: 승인됨)']
   created_at timestamp [default: `now()`, note: '요청일시']
-  processed_at timestamp [note: '처리일시']
+  updated_at timestamp [default: `now()`, note: '수정일시']
+}
+
+// 상품권 핀번호 테이블 - 발급된 핀번호 관리
+Table reward_pins {
+  id bigint [primary key, increment]
+  reward_id bigint [not null, note: '연결된 상품권 ID']
+  pin_number varchar(16) [not null, unique, note: '16자리 핀번호']
+  is_used boolean [default: false, note: '사용 여부']
+  used_at timestamp [note: '사용일시']
+  expires_at timestamp [not null, note: '만료일시 (발급일 + 1년)']
+  created_at timestamp [default: `now()`, note: '발급일시']
+  updated_at timestamp [default: `now()`, note: '수정일시']
 }
 
 // 관계 정의
+// 사용자와 마커: 1:N 관계 (한 사용자가 여러 마커 제보 가능)
+Ref user_markers: markers.reported_by > users.id
+
 // 사용자와 사진: 1:N 관계 (한 사용자가 여러 사진 업로드 가능)
 Ref user_photos: photos.user_id > users.id
 
@@ -72,3 +95,9 @@ Ref photo_point_history: point_history.related_photo_id > photos.id
 
 // 사용자와 상품권 교환: 1:N 관계 (한 사용자의 여러 상품권 교환 요청)
 Ref user_rewards: rewards.user_id > users.id
+
+// 상품권과 핀번호: 1:1 관계 (한 상품권당 하나의 핀번호)
+Ref reward_pins: reward_pins.reward_id > rewards.id
+
+// 사용자와 핀번호: 1:N 관계 (한 사용자의 여러 핀번호)
+Ref user_pins: reward_pins.reward_id > rewards.user_id

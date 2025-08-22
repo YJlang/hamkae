@@ -20,26 +20,33 @@
 ### Backend
 - **Framework**: Spring Boot 3.5.4
 - **Language**: Java 21
-- **Build Tool**: Gradle
+- **Build Tool**: Gradle 8.0+
 - **Database**: MySQL 8.0
-- **ORM**: Spring Data JPA (Hibernate)
+- **ORM**: Spring Data JPA (Hibernate 6.0+)
 - **Security**: JWT + BCrypt (Spring Security 미사용)
+- **AI Integration**: OpenAI GPT-4o API
+- **File Upload**: Multipart file handling with local storage
 
 ### Frontend
 - **Framework**: React 19.1.1
 - **Build Tool**: Vite 7.1.0
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS 3.4+
 - **State Management**: React Context API
 - **HTTP Client**: Axios
+- **Routing**: React Router DOM
+- **UI Components**: Custom components with Tailwind CSS
+- **Mobile Optimization**: Responsive design for mobile devices
 
 ### AI & External APIs
-- **AI 검증**: OpenAI GPT-4o API
-- **지도 API**: Kakao Maps API
+- **AI 검증**: OpenAI GPT-4o API (이미지 분석 전용)
+- **지도 API**: Kakao Maps API (프론트엔드)
+- **Image Processing**: Automatic image type classification
 
 ### Infrastructure
 - **Web Server**: Nginx (Reverse Proxy + SSL)
 - **SSL Certificate**: Let's Encrypt (Certbot)
 - **Deployment**: Amazon Linux 2023 VM
+- **File Storage**: Local file system with organized directory structure
 
 ---
 
@@ -48,14 +55,91 @@
 ### ERD 다이어그램
 - **파일**: `together_erd.dbml`
 - **도구**: dbdiagram.io에서 확인 가능
+- **최종 업데이트**: 2025-08-22
 
-### 주요 테이블
-1. **users** - 사용자 정보 및 포인트 관리
-2. **markers** - 쓰레기 위치 마커 정보 (주소 필드 추가됨)
-3. **photos** - 제보/인증 사진 관리 (BEFORE/AFTER 타입)
-4. **point_history** - 포인트 적립/사용 이력 (EARNED/USED 타입)
-5. **rewards** - 상품권 교환 요청 (즉시 승인 시스템)
-6. **reward_pins** - 상품권 핀번호 관리 (16자리, 1년 유효)
+### 주요 테이블 구조
+
+#### 1. **users** - 사용자 정보 및 포인트 관리
+```sql
+- id: bigint (Primary Key, Auto Increment)
+- name: varchar(100) - 사용자 이름
+- username: varchar(100) - 로그인용 아이디 (Unique)
+- password: varchar(255) - 암호화된 비밀번호 (BCrypt)
+- points: integer - 보유 포인트 (기본값: 0)
+- created_at: timestamp - 가입일시
+- updated_at: timestamp - 수정일시
+```
+
+#### 2. **markers** - 쓰레기 위치 마커 정보
+```sql
+- id: bigint (Primary Key, Auto Increment)
+- lat: decimal(10,8) - 위도
+- lng: decimal(11,8) - 경도
+- address: varchar(500) - 실제 주소 정보
+- description: text - 쓰레기 위치 설명
+- status: varchar(20) - 마커 상태 (active/cleaned/removed)
+- reported_by: bigint - 제보자 ID (users.id 참조)
+- created_at: timestamp - 등록일시
+- updated_at: timestamp - 수정일시
+```
+
+#### 3. **photos** - 제보/인증 사진 관리
+```sql
+- id: bigint (Primary Key, Auto Increment)
+- marker_id: bigint - 연결된 마커 ID
+- user_id: bigint - 업로드한 사용자 ID
+- filename: varchar(255) - 파일명
+- file_path: varchar(500) - 이미지 파일 경로
+- type: varchar(20) - 사진 타입 (BEFORE/AFTER)
+- verification_status: varchar(20) - 검증 상태
+- gpt_response: text - GPT API 응답 결과
+- created_at: timestamp - 업로드일시
+- updated_at: timestamp - 수정일시
+```
+
+#### 4. **point_history** - 포인트 적립/사용 이력
+```sql
+- id: bigint (Primary Key, Auto Increment)
+- user_id: bigint - 사용자 ID
+- points: integer - 변동 포인트 (양수: 적립, 음수: 사용)
+- type: varchar(20) - 포인트 타입 (EARNED/USED)
+- description: text - 포인트 변동 사유
+- related_photo_id: bigint - 관련 사진 ID
+- created_at: timestamp - 변동일시
+- updated_at: timestamp - 수정일시
+```
+
+#### 5. **rewards** - 상품권 교환 요청
+```sql
+- id: bigint (Primary Key, Auto Increment)
+- user_id: bigint - 요청 사용자 ID
+- points_used: integer - 사용한 포인트
+- reward_type: varchar(50) - 상품권 타입
+- status: varchar(20) - 처리 상태 (APPROVED)
+- created_at: timestamp - 요청일시
+- updated_at: timestamp - 수정일시
+```
+
+#### 6. **reward_pins** - 상품권 핀번호 관리
+```sql
+- id: bigint (Primary Key, Auto Increment)
+- reward_id: bigint - 연결된 상품권 ID
+- pin_number: varchar(16) - 16자리 핀번호 (Unique)
+- is_used: boolean - 사용 여부
+- used_at: timestamp - 사용일시
+- expires_at: timestamp - 만료일시 (발급일 + 1년)
+- created_at: timestamp - 발급일시
+- updated_at: timestamp - 수정일시
+```
+
+### 관계 매핑
+- **users ↔ markers**: 1:N (한 사용자가 여러 마커 제보)
+- **users ↔ photos**: 1:N (한 사용자가 여러 사진 업로드)
+- **markers ↔ photos**: 1:N (한 마커에 여러 사진 연결)
+- **users ↔ point_history**: 1:N (한 사용자의 포인트 변동 내역)
+- **photos ↔ point_history**: 1:N (한 사진으로 인한 포인트 적립)
+- **users ↔ rewards**: 1:N (한 사용자의 상품권 교환 요청)
+- **rewards ↔ reward_pins**: 1:1 (한 상품권당 하나의 핀번호)
 
 ---
 
@@ -71,7 +155,7 @@
 - **JWT 토큰 관리**: 24시간 유효기간
 
 #### 2. 마커 관리 시스템 (2025-08-13) ✨ **최신 업데이트!**
-- **Marker 엔티티**: 위치(lat, lng), 설명, 상태, 제보자, 생성/수정일시
+- **Marker 엔티티**: 위치(lat, lng), 주소, 설명, 상태, 제보자, 생성/수정일시
 - **주소 필드 추가**: `address` 필드로 실제 주소 정보 저장
 - **제보자 정보**: `reportedBy` 관계로 제보자 정보 관리
 - **마커 등록 API**: `POST /markers` (다중 사진 업로드 지원)
@@ -98,7 +182,7 @@
 - **응답 파싱 개선**: 더 안정적인 JSON 파싱 로직
 
 #### 5. 도메인 엔티티 및 DTO (2025-08-13) ✨ **최신 업데이트!**
-- **핵심 엔티티**: User, Marker, Photo, PointHistory, Reward
+- **핵심 엔티티**: User, Marker, Photo, PointHistory, Reward, RewardPin
 - **DTO 클래스**: 모든 API 요청/응답을 위한 Data Transfer Object
 - **MarkerResponseDTO**: 주소 및 제보자 정보 포함
 - **관계 매핑**: 1:N 관계 설정 및 Cascade 설정
@@ -199,6 +283,14 @@
 - 백엔드 API 엔드포인트와 정확히 매칭
 - 결과: 마커 삭제 기능 정상 작동
 
+### 7. API 엔드포인트 405 에러 해결 (2025-08-22)
+**문제**: 상품권 교환 시 "Request failed with status code 405" 에러
+**원인**: 프론트엔드에서 `/api/rewards/redeem` 호출, 백엔드에는 `/api/rewards` 존재
+**해결**:
+- 프론트엔드 API 호출 엔드포인트 수정
+- `pointHistoryAPI.js`에서 올바른 엔드포인트 사용
+- 결과: 상품권 교환 기능 정상 작동
+
 ---
 
 ## 🚀 배포 가이드
@@ -211,6 +303,7 @@ export DB_USERNAME="root"
 export DB_PASSWORD="your_password"
 export UPLOAD_DIR="/var/www/hamkae/images/"
 export APP_BASE_URL="https://hamkae.sku-sku.com"
+export OPENAI_API_KEY="your-openai-api-key"
 
 # 백엔드 시작
 nohup java \
@@ -219,6 +312,7 @@ nohup java \
   -DDB_USERNAME="${DB_USERNAME}" \
   -DDB_PASSWORD="${DB_PASSWORD}" \
   -DUPLOAD_DIR="${UPLOAD_DIR}" \
+  -DOPENAI_API_KEY="${OPENAI_API_KEY}" \
   -jar hamkae.jar > hamkae.log 2>&1 &
 ```
 
