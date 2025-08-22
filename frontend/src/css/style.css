@@ -1,0 +1,31 @@
+
+
+@media (min-width: 375px) {
+  .App {
+    width: 375px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 500px) {
+  .App {
+    width: 100vw;
+    margin: 0 auto;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.App {
+  min-height: 100vh;
+}
+
+body {
+    display: flex;
+    justify-self: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
