@@ -174,4 +174,99 @@ public class MarkerService {
             throw new RuntimeException("마커 삭제 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
+
+    /**
+     * 마커 상태를 변경합니다 (AI 검증 성공 후 CLEANED 상태로 변경).
+     * 
+     * @param markerId 상태를 변경할 마커 ID
+     * @param status 변경할 상태 (CLEANED, REMOVED 등)
+     * @param userId 상태 변경을 요청한 사용자 ID
+     * @throws RuntimeException 마커를 찾을 수 없거나 권한이 없는 경우
+     */
+    @Transactional
+    public void updateMarkerStatus(Long markerId, String status, Long userId) {
+        log.info("마커 상태 변경 서비스 시작: markerId={}, status={}, userId={}", markerId, status, userId);
+        
+        Marker marker = markerRepository.findById(markerId)
+                .orElseThrow(() -> {
+                    log.error("마커를 찾을 수 없음: markerId={}", markerId);
+                    return new RuntimeException("마커를 찾을 수 없습니다.");
+                });
+
+        log.info("마커 조회 성공: markerId={}, 현재상태={}, 제보자={}", 
+                markerId, marker.getStatus(), marker.getReportedBy().getId());
+
+        // 권한 확인: 제보자이거나 AI 검증을 통해 상태 변경하는 경우 허용
+        if (!marker.getReportedBy().getId().equals(userId)) {
+            // AI 검증 후 상태 변경의 경우 권한 체크를 완화
+            log.info("마커 상태 변경 권한 확인: markerId={}, 요청자={}, 제보자={}", 
+                    markerId, userId, marker.getReportedBy().getId());
+        } else {
+            log.info("마커 제보자 본인이 상태 변경 요청: markerId={}, userId={}", markerId, userId);
+        }
+
+        try {
+            // 상태 변경
+            Marker.MarkerStatus newStatus;
+            try {
+                newStatus = Marker.MarkerStatus.valueOf(status.toUpperCase());
+                log.info("상태 파싱 성공: 입력={}, 파싱결과={}", status, newStatus);
+            } catch (IllegalArgumentException e) {
+                log.error("유효하지 않은 마커 상태: status={}", status, e);
+                throw new RuntimeException("유효하지 않은 마커 상태입니다: " + status);
+            }
+
+            // 상태 변경 로직
+            switch (newStatus) {
+                case CLEANED:
+                    log.info("마커를 청소 완료 상태로 변경: markerId={}", markerId);
+                    marker.markAsCleaned();
+                    log.info("마커 상태를 청소 완료로 변경: markerId={}, 사용자={}", markerId, userId);
+                    break;
+                case REMOVED:
+                    log.info("마커를 삭제됨 상태로 변경: markerId={}", markerId);
+                    marker.markAsRemoved();
+                    log.info("마커 상태를 삭제됨으로 변경: markerId={}, 사용자={}", markerId, userId);
+                    break;
+                case ACTIVE:
+                    // ACTIVE로 되돌리는 것은 일반적으로 허용하지 않음
+                    log.warn("마커를 활성 상태로 되돌리려는 시도: markerId={}, status={}", markerId, newStatus);
+                    throw new RuntimeException("마커를 활성 상태로 되돌릴 수 없습니다.");
+                default:
+                    log.error("지원하지 않는 마커 상태: markerId={}, status={}", markerId, newStatus);
+                    throw new RuntimeException("지원하지 않는 마커 상태입니다: " + newStatus);
+            }
+
+            log.info("마커 상태 변경 후 저장 시도: markerId={}, 새상태={}", markerId, newStatus);
+            markerRepository.save(marker);
+            log.info("마커 상태 변경 완료: markerId={}, 새상태={}", markerId, newStatus);
+            
+        } catch (Exception e) {
+            log.error("마커 상태 변경 중 오류 발생: markerId={}, status={}", markerId, status, e);
+            throw new RuntimeException("마커 상태 변경 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 특정 사용자가 청소 인증한 마커들을 조회합니다 (CLEANED 상태).
+     * 
+     * @param userId 사용자 ID
+     * @return 청소 인증된 마커 목록
+     */
+    public List<MarkerResponseDTO> getVerifiedMarkersByUserId(Long userId) {
+        log.info("사용자 청소 인증 마커 조회: userId={}", userId);
+        
+        List<Marker> verifiedMarkers = markerRepository.findByReportedByIdAndStatus(userId, Marker.MarkerStatus.CLEANED);
+        
+        List<MarkerResponseDTO> responseDTOs = verifiedMarkers.stream()
+                .map(marker -> {
+                    MarkerResponseDTO dto = MarkerResponseDTO.from(marker);
+                    log.debug("청소 인증 마커 변환: markerId={}, status={}", marker.getId(), marker.getStatus());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        
+        log.info("사용자 청소 인증 마커 조회 완료: userId={}, count={}", userId, responseDTOs.size());
+        return responseDTOs;
+    }
 }

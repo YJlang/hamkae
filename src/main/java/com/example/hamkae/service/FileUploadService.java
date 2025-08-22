@@ -80,10 +80,10 @@ public class FileUploadService {
             throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
         }
 
-        // 파일 크기 제한 (10MB)
-        if (file.getSize() > 10 * 1024 * 1024) {
-            throw new IllegalArgumentException("파일 크기는 10MB를 초과할 수 없습니다.");
-        }
+        // 파일 크기 제한 없음 (무제한 업로드 허용)
+        // if (file.getSize() > 100 * 1024 * 1024) {
+        //     throw new IllegalArgumentException("파일 크기는 100MB를 초과할 수 없습니다.");
+        // }
     }
 
     /**

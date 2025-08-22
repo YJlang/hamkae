@@ -45,6 +45,16 @@ public class MarkerResponseDTO {
     private String description;
 
     /**
+     * 쓰레기 위치의 실제 주소
+     */
+    private String address;
+
+    /**
+     * 마커를 제보한 사용자 정보
+     */
+    private ReporterInfoDTO reporter;
+
+    /**
      * 마커의 현재 상태
      */
     private String status;
@@ -71,8 +81,10 @@ public class MarkerResponseDTO {
                 .lat(marker.getLat())
                 .lng(marker.getLng())
                 .description(marker.getDescription())
+                .address(marker.getAddress())
                 .status(marker.getStatus().name())
                 .createdAt(marker.getCreatedAt())
+                .reporter(ReporterInfoDTO.from(marker.getReportedBy()))
                 .photos(marker.getPhotos().stream()
                         .map(PhotoSimpleDTO::from)
                         .collect(Collectors.toList()))
@@ -96,6 +108,28 @@ public class MarkerResponseDTO {
                     .id(photo.getId())
                     .type(photo.getType().name())
                     .imagePath(photo.getImagePath())
+                    .build();
+        }
+    }
+
+    /**
+     * 제보자 정보를 담는 내부 DTO
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReporterInfoDTO {
+        private Long id;
+        private String username;
+        private String name;
+
+        public static ReporterInfoDTO from(com.example.hamkae.domain.User user) {
+            if (user == null) return null;
+            return ReporterInfoDTO.builder()
+                    .id(user.getId())
+                    .username(user.getUsername())
+                    .name(user.getName())
                     .build();
         }
     }

@@ -115,17 +115,27 @@ public class AiVerificationController {
             var beforePhotos = photoRepository.findByMarkerIdAndType(markerId, Photo.PhotoType.BEFORE);
             var afterPhotos = photoRepository.findByMarkerIdAndType(markerId, Photo.PhotoType.AFTER);
             
-            Map<String, Object> status = Map.of(
-                "markerId", markerId,
-                "hasBeforePhotos", !beforePhotos.isEmpty(),
-                "beforePhotoCount", beforePhotos.size(),
-                "hasAfterPhotos", !afterPhotos.isEmpty(),
-                "afterPhotoCount", afterPhotos.size(),
-                "verificationStatus", afterPhotos.isEmpty() ? "PENDING" : 
-                    afterPhotos.get(0).getVerificationStatus().name(),
-                "gptResponse", afterPhotos.isEmpty() ? null : 
-                    afterPhotos.get(0).getGptResponse()
-            );
+            // Map.of()는 null 값을 허용하지 않으므로 HashMap 사용
+            Map<String, Object> status = new java.util.HashMap<>();
+            status.put("markerId", markerId);
+            status.put("hasBeforePhotos", !beforePhotos.isEmpty());
+            status.put("beforePhotoCount", beforePhotos.size());
+            status.put("hasAfterPhotos", !afterPhotos.isEmpty());
+            status.put("afterPhotoCount", afterPhotos.size());
+            
+            // AFTER 사진이 있는 경우에만 검증 상태 확인
+            if (!afterPhotos.isEmpty()) {
+                Photo afterPhoto = afterPhotos.get(0);
+                status.put("verificationStatus", afterPhoto.getVerificationStatus().name());
+                status.put("gptResponse", afterPhoto.getGptResponse()); // null일 수 있음
+                status.put("canVerify", false);
+                status.put("verificationProgress", "COMPLETED");
+            } else {
+                status.put("verificationStatus", "PENDING");
+                status.put("gptResponse", null);
+                status.put("canVerify", !beforePhotos.isEmpty()); // BEFORE 사진이 있으면 검증 가능
+                status.put("verificationProgress", beforePhotos.isEmpty() ? "NEED_BEFORE_PHOTO" : "NEED_AFTER_PHOTO");
+            }
             
             return ResponseEntity.ok(ApiResponse.success("검증 상태 조회 완료", status));
             

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -30,7 +30,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/markers")
-
+@Slf4j
 public class MarkerController {
 
     private final MarkerService markerService;
@@ -143,11 +143,82 @@ public class MarkerController {
      * @return 해당 사용자가 제보한 마커 목록
      */
     @GetMapping("/user/{userId}")
-
     public ResponseEntity<ApiResponse<List<MarkerResponseDTO>>> getMarkersByUserId(
             @PathVariable Long userId) {
         List<MarkerResponseDTO> markers = markerService.getMarkersByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("사용자별 마커 조회 완료", markers));
+    }
+
+    /**
+     * 현재 사용자의 제보내역을 조회합니다.
+     * 
+     * @param authorization JWT 인증 토큰
+     * @return 현재 사용자가 제보한 마커 목록
+     */
+    @GetMapping("/my-reports")
+    public ResponseEntity<ApiResponse<List<MarkerResponseDTO>>> getMyReports(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(ApiResponse.error("인증 토큰이 필요합니다."));
+        }
+
+        String token = authorization.substring(7);
+        String username = jwtUtil.validateAndGetUsername(token);
+        if (username == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("유효하지 않은 토큰입니다."));
+        }
+
+        Long userId = userRepository.findByUsername(username)
+                .map(u -> u.getId())
+                .orElse(null);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("사용자를 찾을 수 없습니다."));
+        }
+
+        try {
+            List<MarkerResponseDTO> markers = markerService.getMarkersByUserId(userId);
+            return ResponseEntity.ok(ApiResponse.success("제보내역 조회 완료", markers));
+        } catch (Exception e) {
+            log.error("제보내역 조회 실패: userId={}", userId, e);
+            return ResponseEntity.badRequest().body(ApiResponse.error("제보내역 조회 실패: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 현재 사용자의 인증내역을 조회합니다 (청소 완료된 마커들).
+     * 
+     * @param authorization JWT 인증 토큰
+     * @return 현재 사용자가 청소 인증한 마커 목록
+     */
+    @GetMapping("/my-verifications")
+    public ResponseEntity<ApiResponse<List<MarkerResponseDTO>>> getMyVerifications(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(ApiResponse.error("인증 토큰이 필요합니다."));
+        }
+
+        String token = authorization.substring(7);
+        String username = jwtUtil.validateAndGetUsername(token);
+        if (username == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("유효하지 않은 토큰입니다."));
+        }
+
+        Long userId = userRepository.findByUsername(username)
+                .map(u -> u.getId())
+                .orElse(null);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("사용자를 찾을 수 없습니다."));
+        }
+
+        try {
+            List<MarkerResponseDTO> markers = markerService.getVerifiedMarkersByUserId(userId);
+            return ResponseEntity.ok(ApiResponse.success("인증내역 조회 완료", markers));
+        } catch (Exception e) {
+            log.error("인증내역 조회 실패: userId={}", userId, e);
+            return ResponseEntity.badRequest().body(ApiResponse.error("인증내역 조회 실패: " + e.getMessage()));
+        }
     }
 
     /**
@@ -185,6 +256,55 @@ public class MarkerController {
             return ResponseEntity.ok(ApiResponse.success("마커와 연결된 모든 사진이 완전히 삭제되었습니다."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("마커 삭제 실패: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 마커 상태를 변경합니다 (AI 검증 성공 후 CLEANED 상태로 변경).
+     * 
+     * @param id 상태를 변경할 마커 ID
+     * @param status 변경할 상태 (CLEANED, REMOVED 등)
+     * @param authorization JWT 인증 토큰
+     * @return 상태 변경 완료 메시지
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<String>> updateMarkerStatus(
+            @PathVariable Long id,
+            @RequestParam("status") String status,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        
+        log.info("마커 상태 변경 요청: markerId={}, status={}, authorization={}", 
+                id, status, authorization != null ? "있음" : "없음");
+        
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            log.warn("마커 상태 변경 실패: 인증 토큰 없음");
+            return ResponseEntity.status(401).body(ApiResponse.error("인증 토큰이 필요합니다."));
+        }
+
+        String token = authorization.substring(7);
+        String username = jwtUtil.validateAndGetUsername(token);
+        if (username == null) {
+            log.warn("마커 상태 변경 실패: 유효하지 않은 토큰");
+            return ResponseEntity.status(401).body(ApiResponse.error("유효하지 않은 토큰입니다."));
+        }
+
+        Long userId = userRepository.findByUsername(username)
+                .map(u -> u.getId())
+                .orElse(null);
+        if (userId == null) {
+            log.warn("마커 상태 변경 실패: 사용자를 찾을 수 없음, username={}", username);
+            return ResponseEntity.status(401).body(ApiResponse.error("사용자를 찾을 수 없습니다."));
+        }
+
+        log.info("마커 상태 변경 권한 확인 완료: markerId={}, username={}, userId={}", id, username, userId);
+
+        try {
+            markerService.updateMarkerStatus(id, status, userId);
+            log.info("마커 상태 변경 성공: markerId={}, status={}, userId={}", id, status, userId);
+            return ResponseEntity.ok(ApiResponse.success("마커 상태가 성공적으로 변경되었습니다."));
+        } catch (Exception e) {
+            log.error("마커 상태 변경 실패: markerId={}, status={}, userId={}", id, status, userId, e);
+            return ResponseEntity.badRequest().body(ApiResponse.error("마커 상태 변경 실패: " + e.getMessage()));
         }
     }
 }

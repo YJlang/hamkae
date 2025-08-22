@@ -49,6 +49,13 @@ public class GptVerificationService {
     private Integer minIntervalMinutes;
 
     /**
+     * 업로드된 파일을 저장할 기본 디렉토리
+     * application.properties에서 설정값을 읽어옵니다.
+     */
+    @Value("${app.upload.dir}")
+    private String uploadDir;
+
+    /**
      * 사진 비교 검증을 수행합니다.
      * 
      * @param beforePhoto 청소 전 사진
@@ -270,12 +277,13 @@ public class GptVerificationService {
      */
     private ImageMetadata analyzeImageMetadata(Photo photo) {
         try {
-            String actualPath = photo.getImagePath().replace("/images/", "C:/together/hamkae/uploads/images/");
-            Path path = Paths.get(actualPath);
-            File file = path.toFile();
+            // 환경 변수로 설정된 업로드 디렉토리 사용
+            String relativePath = photo.getImagePath().replace("/images/", "");
+            Path fullPath = Paths.get(uploadDir, relativePath);
+            File file = fullPath.toFile();
             
             if (!file.exists()) {
-                log.warn("이미지 파일을 찾을 수 없습니다: {}", actualPath);
+                log.warn("이미지 파일을 찾을 수 없습니다: {}", fullPath);
                 return new ImageMetadata(0, 0, 0, "UNKNOWN", "UNKNOWN");
             }
             

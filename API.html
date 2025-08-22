@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>함께줍줍(Hamkae) API 명세서 v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .new-badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin: 30px 0 20px 0;
+            padding: 15px 20px;
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #4facfe;
+            border-radius: 0 10px 10px 0;
+        }
+
+        h3 {
+            color: #34495e;
+            font-size: 1.4rem;
+            margin: 25px 0 15px 0;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #00f2fe;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .endpoint {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .method {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .method.post { background: #28a745; color: white; }
+        .method.get { background: #007bff; color: white; }
+        .method.delete { background: #dc3545; color: white; }
+        .method.put { background: #ffc107; color: #212529; }
+
+        .url {
+            font-family: 'Courier New', monospace;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            display: inline-block;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .highlight strong {
+            color: #856404;
+        }
+
+        ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #d73a49;
+        }
+
+        .data-structure {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .data-structure h2 {
+            color: white;
+            background: transparent;
+            border-left: none;
+            padding: 0 0 15px 0;
+        }
+
+        .data-structure ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .data-structure li {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00f2fe;
+        }
+
+        .constraints {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .constraints h2 {
+            color: #c53030;
+            background: transparent;
+            border-left: none;
+            padding: 0 0 15px 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .toc {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .toc h3 {
+            color: #1565c0;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            padding: 5px 0;
+        }
+
+        .toc a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ 함께줍줍(Hamkae) API 명세서</h1>
+            <p>프론트엔드 개발자를 위한 완전한 API 가이드</p>
+            <div class="version-badge">v2.0 - 포인트 시스템 & 상품권 교환 완성</div>
+        </div>
+
+        <div class="content">
+            <div class="toc">
+                <h3>📑 목차</h3>
+                <ul>
+                    <li><a href="#basic-info">📋 기본 정보</a></li>
+                    <li><a href="#auth">🔐 1) 인증</a></li>
+                    <li><a href="#markers">📍 2) 마커 관리</a></li>
+                    <li><a href="#photos">📸 3) 사진 관리</a></li>
+                    <li><a href="#ai-verification">🤖 4) AI 검증</a></li>
+                    <li><a href="#point-history">💰 5) 포인트 이력 <span class="new-badge">NEW</span></a></li>
+                    <li><a href="#rewards">🎁 6) 상품권 교환 <span class="new-badge">NEW</span></a></li>
+                    <li><a href="#reward-pins">🏷️ 7) 상품권 핀번호 <span class="new-badge">NEW</span></a></li>
+                    <li><a href="#users">👤 8) 사용자 프로필 <span class="new-badge">NEW</span></a></li>
+                    <li><a href="#data-structures">📊 데이터 구조</a></li>
+                </ul>
+            </div>
+
+            <div class="section" id="basic-info">
+                <h2>📋 기본 정보</h2>
+                <ul>
+                    <li><strong>Base URL:</strong> <code>http://localhost:8080</code></li>
+                    <li><strong>인증:</strong> 필요한 API에 <code>Authorization: Bearer {JWT}</code></li>
+                    <li><strong>공통 응답:</strong> <code>ApiResponse&lt;T&gt;</code> → <code>success:boolean</code>, <code>message:string</code>, <code>data:T|null</code></li>
+                    <li><strong>새로운 기능:</strong> 포인트 적립/사용, 상품권 교환, 핀번호 발급 시스템 완성</li>
+                </ul>
+            </div>
+
+            <div class="section" id="auth">
+                <h2>🔐 1) 인증</h2>
+                
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/auth/register</div>
+                    <ul>
+                        <li><strong>Body (JSON):</strong>
+                            <div class="code-block">
+<pre>{
+  "name": "홍길동",
+  "username": "hong123",
+  "password": "password123"
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "회원가입 성공",
+  "data": {
+    "user_id": 1
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (400) - 중복 사용자명:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "이미 존재하는 사용자명입니다.",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (400) - 유효성 검증 실패:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "입력값이 올바르지 않습니다.",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>요청 제약사항:</strong>
+                            <ul>
+                                <li><code>name</code>: 2~20자 한글/영문</li>
+                                <li><code>username</code>: 4~20자 영문/숫자/언더스코어</li>
+                                <li><code>password</code>: 8~20자 영문/숫자/특수문자</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/auth/login</div>
+                    <ul>
+                        <li><strong>Body (JSON):</strong>
+                            <div class="code-block">
+<pre>{
+  "username": "hong123",
+  "password": "password123"
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "로그인 성공",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": 1,
+      "name": "홍길동",
+      "username": "hong123",
+      "points": 520
+    }
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (401) - 잘못된 비밀번호:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "비밀번호가 일치하지 않습니다.",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (404) - 존재하지 않는 사용자:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "존재하지 않는 사용자명입니다.",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>JWT 토큰 정보:</strong>
+                            <ul>
+                                <li><strong>유효기간:</strong> 24시간</li>
+                                <li><strong>사용법:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                                <li><strong>갱신:</strong> 재로그인 필요</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section" id="markers">
+                <h2>📍 2) 마커 관리</h2>
+                
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/markers (사진 포함 등록)</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>Body (form-data):</strong>
+                            <ul>
+                                <li><code>lat: string</code> - 위도 (예: "37.5665")</li>
+                                <li><code>lng: string</code> - 경도 (예: "126.9780")</li>
+                                <li><code>description: string</code> - 마커 설명 (1~200자)</li>
+                                <li><code>images: file[]</code> - 사진 파일들 (선택사항, 최대 5장)</li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "마커 등록 완료",
+  "data": {
+    "marker_id": 10,
+    "uploaded_images": [
+      "/images/2025/08/18/uuid1.jpg",
+      "/images/2025/08/18/uuid2.jpg"
+    ],
+    "image_count": 2,
+    "created_at": "2025-08-18T10:12:00"
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>요청 제약사항:</strong>
+                            <ul>
+                                <li><strong>위도/경도:</strong> 유효한 GPS 좌표값</li>
+                                <li><strong>설명:</strong> 1~200자 한글/영문/숫자</li>
+                                <li><strong>사진:</strong> jpg/jpeg/png, 100KB~10MB, 최대 5장</li>
+                                <li><strong>사진 해상도:</strong> 640x480 ~ 4096x4096</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/markers (활성 마커 목록)</div>
+                    <ul>
+                        <li><strong>Query Parameters (선택사항):</strong>
+                            <ul>
+                                <li><code>status</code> - 마커 상태 필터 (ACTIVE, CLEANED, REMOVED)</li>
+                                <li><code>page</code> - 페이지 번호 (기본값: 0)</li>
+                                <li><code>size</code> - 페이지 크기 (기본값: 20, 최대: 100)</li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "마커 조회 완료",
+  "data": {
+    "content": [
+      {
+        "id": 10,
+        "lat": 37.5665,
+        "lng": 126.978,
+        "description": "공원 입구 쓰레기",
+        "status": "ACTIVE",
+        "createdAt": "2025-08-18T10:12:00",
+        "user": {
+          "id": 1,
+          "name": "홍길동"
+        },
+        "photos": [
+          {
+            "id": 101,
+            "type": "BEFORE",
+            "imagePath": "/images/2025/08/18/uuid1.jpg"
+          }
+        ]
+      }
+    ],
+    "totalElements": 1,
+    "totalPages": 1,
+    "currentPage": 0,
+    "size": 20
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/markers/{id}</div>
+                    <ul>
+                        <li><strong>Path Parameters:</strong> <code>id</code> - 마커 ID (number)</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "마커 조회 완료",
+  "data": {
+    "id": 10,
+    "lat": 37.5665,
+    "lng": 126.978,
+    "description": "공원 입구 쓰레기",
+    "status": "ACTIVE",
+    "createdAt": "2025-08-18T10:12:00",
+    "updatedAt": "2025-08-18T10:12:00",
+    "user": {
+      "id": 1,
+      "name": "홍길동",
+      "username": "hong123"
+    },
+    "photos": [
+      {
+        "id": 101,
+        "type": "BEFORE",
+        "imagePath": "/images/2025/08/18/uuid1.jpg",
+        "verificationStatus": "PENDING",
+        "createdAt": "2025-08-18T10:12:00"
+      }
+    ]
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method delete">DELETE</span>
+                    <div class="url">/markers/{id}</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>Path Parameters:</strong> <code>id</code> - 마커 ID (number)</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "마커와 연결된 모든 사진이 완전히 삭제되었습니다.",
+  "data": {
+    "deleted_marker_id": 10,
+    "deleted_photos_count": 3,
+    "deleted_files_count": 3
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section" id="photos">
+                <h2>📸 3) 사진 관리</h2>
+                
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/photos/upload/cleanup (AFTER 업로드)</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>Body (form-data):</strong>
+                            <ul>
+                                <li><code>marker_id: number</code> - 마커 ID (필수)</li>
+                                <li><code>images: file[]</code> - 청소 완료 사진들 (필수, 최대 5장)</li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "청소 인증용 사진 업로드 완료",
+  "data": {
+    "photo_ids": [201, 202],
+    "marker_id": 10,
+    "type": "AFTER",
+    "count": 2,
+    "uploaded_images": [
+      "/images/2025/08/18/uuid3.jpg",
+      "/images/2025/08/18/uuid4.jpg"
+    ],
+    "created_at": "2025-08-18T10:20:00"
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>동작 흐름:</strong>
+                            <ul>
+                                <li>1. 사진 업로드 → 즉시 200 응답</li>
+                                <li>2. AI 검증은 비동기로 진행</li>
+                                <li>3. 검증 상태는 <code>/ai-verification/status/{markerId}</code>로 조회</li>
+                                <li>4. 검증 완료 시 자동으로 포인트 지급 (100-120pt)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/photos/{id}</div>
+                    <ul>
+                        <li><strong>Path Parameters:</strong> <code>id</code> - 사진 ID (number)</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "사진 조회 완료",
+  "data": {
+    "id": 201,
+    "marker_id": 10,
+    "user_id": 1,
+    "image_path": "/images/2025/08/18/uuid3.jpg",
+    "type": "AFTER",
+    "verification_status": "PENDING",
+    "created_at": "2025-08-18T10:20:00",
+    "gpt_response": null,
+    "file_size": 2048576,
+    "width": 1920,
+    "height": 1080
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/photos/marker/{markerId}</div>
+                    <ul>
+                        <li><strong>Path Parameters:</strong> <code>markerId</code> - 마커 ID (number)</li>
+                        <li><strong>Query Parameters (선택사항):</strong>
+                            <ul>
+                                <li><code>type</code> - 사진 타입 필터 (BEFORE, AFTER)</li>
+                                <li><code>status</code> - 검증 상태 필터 (PENDING, APPROVED, REJECTED)</li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "마커별 사진 조회 완료",
+  "data": {
+    "marker_id": 10,
+    "total_count": 3,
+    "before_count": 1,
+    "after_count": 2,
+    "photos": [
+      {
+        "id": 101,
+        "type": "BEFORE",
+        "image_path": "/images/2025/08/18/uuid1.jpg",
+        "verification_status": "PENDING",
+        "created_at": "2025-08-18T10:10:00",
+        "user": {
+          "id": 1,
+          "name": "홍길동"
+        }
+      },
+      {
+        "id": 201,
+        "type": "AFTER",
+        "image_path": "/images/2025/08/18/uuid3.jpg",
+        "verification_status": "APPROVED",
+        "created_at": "2025-08-18T10:20:00",
+        "user": {
+          "id": 1,
+          "name": "홍길동"
+        },
+        "gpt_response": "청소가 완료되었습니다."
+      }
+    ]
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section" id="ai-verification">
+                <h2>🤖 4) AI 검증</h2>
+                
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/ai-verification/verify/{markerId} (수동 검증)</div>
+                    <ul>
+                        <li><strong>Path Parameters:</strong> <code>markerId</code> - 마커 ID (number)</li>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code> (선택사항)</li>
+                        <li><strong>동작:</strong> 해당 마커의 BEFORE/AFTER 사진을 AI로 검증</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "AI 검증이 완료되었습니다.",
+  "data": {
+    "success": true,
+    "verificationResult": "APPROVED",
+    "gptResponse": "{\"verification_result\":\"APPROVED\",\"confidence\":0.86,\"reason\":\"청소 전후 사진을 비교한 결과, 쓰레기가 제거되었음을 확인했습니다.\"}",
+    "confidence": 0.86,
+    "verifiedAt": "2025-08-18T10:21:30",
+    "processingTime": 2.5,
+    "pointsRewarded": 120
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>포인트 적립 시스템:</strong>
+                            <ul>
+                                <li><strong>기본 포인트:</strong> 100pt</li>
+                                <li><strong>보너스 포인트:</strong> 신뢰도 80% 이상 시 +20pt</li>
+                                <li><strong>총 최대:</strong> 120pt</li>
+                                <li><strong>적립 조건:</strong> AI 검증 승인 시에만 자동 적립</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/ai-verification/status/{markerId}</div>
+                    <ul>
+                        <li><strong>Path Parameters:</strong> <code>markerId</code> - 마커 ID (number)</li>
+                        <li><strong>동작:</strong> 마커의 AI 검증 상태 및 사진 정보 조회</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "검증 상태 조회 완료",
+  "data": {
+    "markerId": 10,
+    "hasBeforePhotos": true,
+    "beforePhotoCount": 1,
+    "hasAfterPhotos": true,
+    "afterPhotoCount": 2,
+    "verificationStatus": "APPROVED",
+    "verificationResult": "APPROVED",
+    "confidence": 0.86,
+    "verifiedAt": "2025-08-18T10:21:30",
+    "gptResponse": "{\"verification_result\":\"APPROVED\",\"confidence\":0.86}",
+    "pointsRewarded": 120,
+    "canVerify": false,
+    "verificationProgress": "COMPLETED"
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/ai-verification/health</div>
+                    <ul>
+                        <li><strong>동작:</strong> AI 검증 서비스 상태 확인</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "AI 검증 서비스 정상 동작 중",
+  "data": {
+    "status": "HEALTHY",
+    "service": "OpenAI GPT-4o",
+    "model": "gpt-4o",
+    "timestamp": "2025-08-18T10:30:00",
+    "pointsReward": 100,
+    "minIntervalMinutes": 0,
+    "apiKeyConfigured": true,
+    "lastVerification": "2025-08-18T10:21:30",
+    "totalVerifications": 15,
+    "successRate": 0.93
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section" id="point-history">
+                <h2>💰 5) 포인트 이력 <span class="new-badge">NEW</span></h2>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/point-history</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 현재 사용자의 포인트 적립/사용 이력을 최신순으로 조회</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "포인트 이력 조회 성공",
+  "data": [
+    {
+      "id": 15,
+      "points": 120,
+      "type": "EARNED",
+      "description": "청소 인증 완료 (신뢰도: 85%)",
+      "createdAt": "2025-01-14T10:30:00",
+      "relatedPhotoId": 45
+    },
+    {
+      "id": 14,
+      "points": -5000,
+      "type": "USED",
+      "description": "5천원 상품권 교환",
+      "createdAt": "2025-01-14T09:15:00",
+      "relatedPhotoId": null
+    }
+  ]
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/point-history/statistics</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 사용자의 포인트 통계 정보 조회</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "포인트 통계 조회 성공",
+  "data": {
+    "totalEarned": 1200,
+    "totalUsed": 680,
+    "currentPoints": 520,
+    "availablePoints": 520
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/point-history/filter</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>Query Parameters:</strong>
+                            <ul>
+                                <li><code>type</code> - 포인트 타입 (EARNED, USED)</li>
+                                <li><code>startDate</code> - 시작일 (YYYY-MM-DDTHH:mm:ss)</li>
+                                <li><code>endDate</code> - 종료일 (YYYY-MM-DDTHH:mm:ss)</li>
+                                <li><code>limit</code> - 조회 개수 (기본값: 50)</li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong> <code>PointHistoryResponseDTO[]</code> 배열</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section" id="rewards">
+                <h2>🎁 6) 상품권 교환 <span class="new-badge">NEW</span></h2>
+
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/api/rewards</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 포인트로 상품권 즉시 교환 (핀번호 즉시 발급)</li>
+                        <li><strong>Body (JSON):</strong>
+                            <div class="code-block">
+<pre>{
+  "pointsUsed": 5000,
+  "rewardType": "FIVE_THOUSAND"
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "상품권 교환이 완료되었습니다",
+  "data": {
+    "id": 25,
+    "pointsUsed": 5000,
+    "rewardType": "FIVE_THOUSAND",
+    "quantity": 1,
+    "status": "APPROVED",
+    "createdAt": "2025-01-14T11:00:00",
+    "processedAt": "2025-01-14T11:00:00",
+    "pinNumbers": ["1234-5678-9012-3456"]
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (400) - 포인트 부족:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "보유 포인트가 부족합니다. 현재: 520, 필요: 5000",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>상품권 타입:</strong>
+                            <ul>
+                                <li><code>FIVE_THOUSAND</code> - 5천원 (5000pt)</li>
+                                <li><code>TEN_THOUSAND</code> - 1만원 (10000pt)</li>
+                                <li><code>THIRTY_THOUSAND</code> - 3만원 (30000pt)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/rewards</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 현재 사용자의 상품권 교환 이력 조회</li>
+                        <li><strong>Query Parameters (선택사항):</strong>
+                            <ul>
+                                <li><code>status</code> - 상태 필터 (PENDING, APPROVED, REJECTED)</li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "상품권 교환 이력 조회 성공",
+  "data": [
+    {
+      "id": 25,
+      "pointsUsed": 5000,
+      "rewardType": "5천원 상품권",
+      "status": "APPROVED",
+      "createdAt": "2025-01-14T11:00:00",
+      "approvedAt": "2025-01-14T11:05:00",
+      "rejectedAt": null,
+      "reason": null
+    }
+  ]
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+
+            </div>
+
+            <div class="section" id="reward-pins">
+                <h2>🏷️ 7) 상품권 핀번호 <span class="new-badge">NEW</span></h2>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/reward-pins</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 현재 사용자의 모든 상품권 핀번호 조회</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "핀번호 목록 조회 성공",
+  "data": [
+    {
+      "id": 8,
+      "rewardId": 25,
+      "maskedPinNumber": "****-****-****-5678",
+      "rewardType": "5천원 상품권",
+      "pointsUsed": 5000,
+      "issuedAt": "2025-01-14T11:05:00",
+      "expiresAt": "2026-01-14T11:05:00",
+      "isUsed": false,
+      "usedAt": null,
+      "isAvailable": true,
+      "isExpired": false
+    }
+  ]
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/reward-pins/available</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 사용 가능한 핀번호만 조회 (미사용 + 미만료)</li>
+                        <li><strong>성공 응답 (200):</strong> <code>RewardPinResponseDTO[]</code> 배열</li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/reward-pins/used</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 사용된 핀번호 이력 조회</li>
+                        <li><strong>성공 응답 (200):</strong> <code>RewardPinResponseDTO[]</code> 배열</li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/reward-pins/reward/{rewardId}</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 특정 상품권 교환의 핀번호 조회 (실제 핀번호 포함)</li>
+                        <li><strong>Path Parameters:</strong> <code>rewardId</code> - 상품권 교환 요청 ID</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "핀번호 조회 성공",
+  "data": {
+    "id": 8,
+    "rewardId": 25,
+    "maskedPinNumber": "****-****-****-5678",
+    "fullPinNumber": "1234-5678-9012-5678",
+    "rewardType": "5천원 상품권",
+    "pointsUsed": 5000,
+    "issuedAt": "2025-01-14T11:05:00",
+    "expiresAt": "2026-01-14T11:05:00",
+    "isUsed": false,
+    "isAvailable": true
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <div class="url">/api/reward-pins/use/{pinNumber}</div>
+                    <ul>
+                        <li><strong>설명:</strong> 핀번호 사용 처리 (상품권 사용 시)</li>
+                        <li><strong>Path Parameters:</strong> <code>pinNumber</code> - 16자리 핀번호 (하이픈 포함)</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "핀번호 사용 처리 완료",
+  "data": {
+    "id": 8,
+    "rewardType": "5천원 상품권",
+    "pointsUsed": 5000,
+    "isUsed": true,
+    "usedAt": "2025-01-14T12:30:00"
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (400) - 이미 사용됨:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "이미 사용된 핀번호입니다",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (400) - 만료됨:</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "만료된 핀번호입니다",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/reward-pins/info/{pinNumber}</div>
+                    <ul>
+                        <li><strong>설명:</strong> 핀번호 유효성 및 정보 확인</li>
+                        <li><strong>Path Parameters:</strong> <code>pinNumber</code> - 16자리 핀번호</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "핀번호 정보 조회 성공",
+  "data": {
+    "id": 8,
+    "rewardType": "5천원 상품권",
+    "pointsUsed": 5000,
+    "issuedAt": "2025-01-14T11:05:00",
+    "expiresAt": "2026-01-14T11:05:00",
+    "isUsed": false,
+    "isAvailable": true,
+    "isExpired": false
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section" id="users">
+                <h2>👤 8) 사용자 프로필 <span class="new-badge">NEW</span></h2>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/users/profile</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 현재 사용자의 프로필 및 통계 정보 조회</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "사용자 프로필 조회 성공",
+  "data": {
+    "id": 1,
+    "name": "홍길동",
+    "username": "hong123",
+    "points": 520,
+    "totalEarnedPoints": 1200,
+    "totalUsedPoints": 680,
+    "reportedMarkersCount": 8,
+    "uploadedPhotosCount": 15,
+    "rewardExchangeCount": 2,
+    "issuedPinsCount": 2,
+    "createdAt": "2025-01-10T10:00:00",
+    "updatedAt": "2025-01-14T12:00:00"
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/users/points/summary</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 사용자 포인트 현황 요약</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "포인트 현황 조회 성공",
+  "data": {
+    "totalEarned": 1200,
+    "totalUsed": 680,
+    "currentPoints": 520,
+    "availablePoints": 520
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <div class="url">/api/users/activity/summary</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 사용자 활동 요약 정보</li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "활동 요약 조회 성공",
+  "data": {
+    "userId": 1,
+    "username": "hong123",
+    "name": "홍길동",
+    "currentPoints": 520,
+    "totalEarnedPoints": 1200,
+    "totalUsedPoints": 680,
+    "reportedMarkersCount": 8,
+    "uploadedPhotosCount": 15,
+    "rewardExchangeCount": 2,
+    "issuedPinsCount": 2,
+    "memberSince": "2025-01-10T10:00:00"
+  }
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span class="method get">GET</span>
+                    <div class="url">/api/users/points/admin-set</div>
+                    <ul>
+                        <li><strong>Header:</strong> <code>Authorization: Bearer {JWT}</code></li>
+                        <li><strong>설명:</strong> 테스트용 포인트 강제 설정 API (개발/테스트 환경에서만 사용)</li>
+                        <li><strong>지원 방식:</strong>
+                            <ul>
+                                <li><strong>POST + JSON Body:</strong> <code>{"points": 10000}</code></li>
+                                <li><strong>POST + URL 파라미터:</strong> <code>?points=10000</code></li>
+                                <li><strong>GET + URL 파라미터:</strong> <code>?points=10000</code></li>
+                            </ul>
+                        </li>
+                        <li><strong>성공 응답 (200):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": true,
+  "message": "포인트 설정 완료",
+  "data": {
+    "username": "hong123",
+    "oldPoints": 120,
+    "newPoints": 10000,
+    "method": "POST",
+    "message": "포인트가 성공적으로 설정되었습니다."
+  }
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>실패 응답 (400):</strong>
+                            <div class="code-block">
+<pre>{
+  "success": false,
+  "message": "포인트는 0 이상이어야 합니다.",
+  "data": null
+}</pre>
+                            </div>
+                        </li>
+                        <li><strong>⚠️ 주의사항:</strong> 운영 환경에서는 절대 사용하지 마세요. 개발/테스트 목적으로만 사용하세요.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="data-structure" id="data-structures">
+                <h2>📊 데이터 구조 (전체)</h2>
+                <ul>
+                    <li><strong>MarkerResponseDTO</strong><br>
+                        <code>id:number</code>, <code>lat:number</code>, <code>lng:number</code>, <code>description:string</code>, <code>status:"ACTIVE"|"CLEANED"|"REMOVED"</code>, <code>createdAt:string</code>, <code>photos:{id:number,type:"BEFORE"|"AFTER",imagePath:string}[]</code>
+                    </li>
+                    <li><strong>PhotoResponseDTO</strong><br>
+                        <code>id:number</code>, <code>markerId:number</code>, <code>userId:number</code>, <code>imagePath:string</code>, <code>type:"BEFORE"|"AFTER"</code>, <code>verificationStatus:"PENDING"|"APPROVED"|"REJECTED"</code>, <code>gptResponse?:string</code>, <code>createdAt:string</code>
+                    </li>
+                    <li><strong>GptVerificationResponseDTO</strong><br>
+                        <code>success:boolean</code>, <code>verificationResult:"APPROVED"|"REJECTED"</code>, <code>gptResponse:string</code>, <code>confidence:number</code>, <code>errorMessage?:string</code>, <code>verifiedAt:string</code>
+                    </li>
+                    <li><strong>PointHistoryResponseDTO</strong> <span class="new-badge">NEW</span><br>
+                        <code>id:number</code>, <code>points:number</code>, <code>type:"EARNED"|"USED"</code>, <code>description:string</code>, <code>createdAt:string</code>, <code>relatedPhotoId?:number</code>
+                    </li>
+                    <li><strong>RewardResponseDTO</strong> <span class="new-badge">NEW</span><br>
+                        <code>id:number</code>, <code>pointsUsed:number</code>, <code>rewardType:string</code>, <code>status:"PENDING"|"APPROVED"|"REJECTED"</code>, <code>createdAt:string</code>, <code>approvedAt?:string</code>, <code>reason?:string</code>
+                    </li>
+                    <li><strong>RewardPinResponseDTO</strong> <span class="new-badge">NEW</span><br>
+                        <code>id:number</code>, <code>rewardId:number</code>, <code>maskedPinNumber:string</code>, <code>fullPinNumber?:string</code>, <code>rewardType:string</code>, <code>pointsUsed:number</code>, <code>issuedAt:string</code>, <code>expiresAt:string</code>, <code>isUsed:boolean</code>, <code>isAvailable:boolean</code>
+                    </li>
+                    <li><strong>UserProfileResponseDTO</strong> <span class="new-badge">NEW</span><br>
+                        <code>id:number</code>, <code>name:string</code>, <code>username:string</code>, <code>points:number</code>, <code>totalEarnedPoints:number</code>, <code>totalUsedPoints:number</code>, <code>reportedMarkersCount:number</code>, <code>uploadedPhotosCount:number</code>, <code>rewardExchangeCount:number</code>, <code>issuedPinsCount:number</code>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="constraints">
+                <h2>⚠️ 업로드 제약 & 새로운 규칙</h2>
+                <ul>
+                    <li><strong>파일 형식:</strong> 확장자: <code>jpg|jpeg|png</code>, 크기: <code>100KB~10MB</code>, 해상도: <code>640x480~4096x4096</code></li>
+                    <li><strong>중복 제한:</strong> AFTER 중복 업로드 제한(같은 마커 동일 타입 재업로드 불가)</li>
+                    <li><strong>정적 제공:</strong> <code>/images/**</code></li>
+                    <li><strong>포인트 교환:</strong> 5천원(5000pt), 1만원(10000pt), 3만원(30000pt) 상품권만 지원</li>
+                    <li><strong>핀번호:</strong> 16자리 XXXX-XXXX-XXXX-XXXX 형식, 교환 즉시 발급, 1년 유효기간</li>
+                    <li><strong>교환 방식:</strong> 관리자 승인 없이 즉시 교환 및 핀번호 발급</li>
+                    <li><strong>포인트 적립:</strong> AI 검증 승인 시에만 자동 적립 (기본 100pt + 신뢰도 보너스 최대 20pt)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🗑️ 함께줍줍(Hamkae) - 안양시 쓰레기 문제 해결을 위한 시민 참여형 플랫폼</p>
+            <p>© 2025 멋사 해커톤 3팀 | v2.0 - 포인트 시스템 & 상품권 교환 완성</p>
+        </div>
+    </div>
+</body>
+</html>

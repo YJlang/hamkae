@@ -1,11 +1,13 @@
 package com.example.hamkae.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,19 +27,26 @@ import java.util.UUID;
 @Service
 public class ImageValidationService {
 
-    // 최소 이미지 해상도
-    private static final int MIN_WIDTH = 640;
-    private static final int MIN_HEIGHT = 480;
+    /**
+     * 업로드된 파일을 저장할 기본 디렉토리
+     * application.properties에서 설정값을 읽어옵니다.
+     */
+    @Value("${app.upload.dir}")
+    private String uploadDir;
+
+    // 최소 이미지 해상도 (모바일 친화적)
+    private static final int MIN_WIDTH = 320;
+    private static final int MIN_HEIGHT = 240;
     
-    // 최대 이미지 해상도
-    private static final int MAX_WIDTH = 4096;
-    private static final int MAX_HEIGHT = 4096;
+    // 최대 이미지 해상도 (모바일 친화적)
+    private static final int MAX_WIDTH = 8192;
+    private static final int MAX_HEIGHT = 8192;
     
-    // 최소 파일 크기 (100KB)
-    private static final long MIN_FILE_SIZE = 100 * 1024;
+    // 최소 파일 크기 (10KB - 모바일 친화적)
+    private static final long MIN_FILE_SIZE = 10 * 1024;
     
-    // 최대 파일 크기 (10MB)
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    // 최대 파일 크기 제한 없음 (무제한 업로드 허용)
+    private static final long MAX_FILE_SIZE = -1;
 
     /**
      * 이미지 파일의 품질을 검증합니다.
@@ -79,9 +88,10 @@ public class ImageValidationService {
         if (fileSize < MIN_FILE_SIZE) {
             throw new IllegalArgumentException("파일 크기가 너무 작습니다. 최소 " + (MIN_FILE_SIZE / 1024) + "KB 이상이어야 합니다.");
         }
-        if (fileSize > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("파일 크기가 너무 큽니다. 최대 " + (MAX_FILE_SIZE / 1024 / 1024) + "MB 이하여야 합니다.");
-        }
+        // 최대 파일 크기 제한 없음 (무제한 업로드 허용)
+        // if (fileSize > MAX_FILE_SIZE) {
+        //     throw new IllegalArgumentException("파일 크기가 너무 큽니다. 최대 " + (MAX_FILE_SIZE / 1024 / 1024) + "MB 이하여야 합니다.");
+        // }
 
         // 파일 타입 검증
         String contentType = file.getContentType();
@@ -212,21 +222,14 @@ public class ImageValidationService {
         try {
             // 파일 경로에서 실제 파일 읽기
             // imagePath는 "/images/2025/08/17/filename.jpg" 형태
-            // 실제 파일은 "C:/together/hamkae/uploads/images/2025/08/17/filename.jpg"에 저장됨
-            String actualPath = imagePath.replace("/images/", "C:/together/hamkae/uploads/images/");
-            Path path = Paths.get(actualPath);
-            File file = path.toFile();
+            // 실제 파일은 환경 변수로 설정된 경로에 저장됨
+            String relativePath = imagePath.replace("/images/", "");
+            Path fullPath = Paths.get(uploadDir, relativePath);
+            File file = fullPath.toFile();
             
             if (!file.exists()) {
-                log.warn("이미지 파일을 찾을 수 없습니다: {}", actualPath);
-                // 상대 경로로도 시도
-                String relativePath = imagePath.replace("/images/", "uploads/images/");
-                path = Paths.get(relativePath);
-                file = path.toFile();
-                
-                if (!file.exists()) {
-                    throw new IOException("이미지 파일을 찾을 수 없습니다: " + imagePath);
-                }
+                log.warn("이미지 파일을 찾을 수 없습니다: {}", fullPath);
+                throw new IOException("이미지 파일을 찾을 수 없습니다: " + imagePath);
             }
 
             // 이미지 압축 및 최적화

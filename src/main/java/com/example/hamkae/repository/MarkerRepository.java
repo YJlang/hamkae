@@ -76,4 +76,13 @@ public interface MarkerRepository extends JpaRepository<Marker, Long> {
      * @return 해당 상태의 마커 개수
      */
     long countByStatus(MarkerStatus status);
+
+    /**
+     * 특정 사용자가 제보하고 특정 상태인 마커들을 조회합니다.
+     *
+     * @param userId 제보자 사용자 ID
+     * @param status 조회할 마커 상태
+     * @return 해당 사용자가 제보하고 특정 상태인 마커 목록
+     */
+    List<Marker> findByReportedByIdAndStatus(Long userId, MarkerStatus status);
 }
