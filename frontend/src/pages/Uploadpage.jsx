@@ -303,14 +303,14 @@ const Uploadpage = () => {
         <div className='flex mb-3 items-center'>
           <img src='/marker.png' className='ml-2 w-3 h-4 mr-2' alt="위치 마커"/>
           <span className='font-bold text-xl px-2 mr-2'>
-            {marker?.address || marker?.description || '위치 정보'}
+            {/* 위치정보가 자꾸 코멘트로 떠서 지워버림. 김혜린 수정 2025-08-23 */}
+            {marker?.address || '위치 정보'}
           </span>
         </div>
         
         {/* 제보자 정보 추가 */}
         {marker?.reporter && (
           <div className='flex mb-3 items-center'>
-            <span className='ml-2 w-4 h-4 mr-2 text-gray-500'>👤</span>
             <span className='text-sm text-gray-600'>
               제보자: {marker.reporter.name || marker.reporter.username}
             </span>
@@ -319,8 +319,7 @@ const Uploadpage = () => {
         
         {/* 코멘트 정보 (제보자가 작성한 설명) */}
         {marker?.description && marker?.description !== marker?.address && (
-          <div className='ml-2 mb-3'>
-            <p className='text-sm text-gray-500 mb-1'>제보자 코멘트:</p>
+          <div className='ml-1 mb-3'>
             <p className='text-sm text-gray-700 bg-gray-50 p-2 rounded'>
               {marker.description}
             </p>
@@ -399,15 +398,17 @@ const Uploadpage = () => {
             <h2 className="text-lg font-bold text-gray-800 mb-3">청소 후 사진 업로드</h2>
             <div className='space-y-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  청소 완료 사진 선택
-                </label>
+                {/* 
+                작업자: 김혜린
+                날짜: 2025-08-23
+                수정내용: 파일 선택 버튼 포커스 스타일 개선 - 검정색 테두리를 초록색 링 효과로 변경
+                */}
                 <input
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={handleFileSelect}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#73C03F] file:text-white hover:file:bg-[#5a9a32]"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#73C03F] file:text-white hover:file:bg-[#5a9a32] focus:outline-none focus:ring-2 focus:ring-[#73C03F] focus:ring-opacity-50"
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   청소 전후를 비교할 수 있는 명확한 사진을 업로드해주세요.
@@ -477,7 +478,6 @@ const Uploadpage = () => {
                   {verificationResult === 'APPROVED' && (
                     <div className="text-green-700 text-sm">
                       <p>축하합니다! 100포인트가 적립되었습니다. 🎉</p>
-                      <p className="mt-1 text-xs">청소 완료된 마커는 지도에서 자동으로 숨겨집니다.</p>
                     </div>
                   )}
                 </div>

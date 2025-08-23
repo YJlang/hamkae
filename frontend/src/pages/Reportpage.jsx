@@ -247,7 +247,9 @@ const Reportpage = () => {
             const created = payload?.data || payload;
             console.log("✅ 생성된 마커 데이터:", created);
             
-            alert("제보가 접수되었습니다! 검토 후 포인트가 지급됩니다.");
+            //김혜린 수정 2025-08-23
+            //검토 후 포인트가 지급됩니다. 메시지 삭제
+            alert("제보가 접수되었습니다!");
             
             // 신규 마커 정보를 맵 페이지로 전달
             // 백엔드 응답에는 marker_id만 있고, lat/lng/description은 원본 reportData에서 가져와야 함

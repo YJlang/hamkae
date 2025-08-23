@@ -108,7 +108,6 @@ const VerificationHistory = () => {
           </button>
           <h1 className="text-[28px] font-extrabold tracking-tight">인증내역</h1>
         </div>
-        <p className="text-sm opacity-90 mt-2">내가 청소 완료한 구역들</p>
       </div>
 
       {/* 본문 */}

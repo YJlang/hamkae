@@ -16,8 +16,8 @@ const Navbar = () => {
         <div>
             <nav className="fixed bottom-0 z-50
                   left-1/2 transform -translate-x-1/2
-                  w-full max-w-[375px]
-                  bg-white shadow-lg p-4">
+                  w-full max-w-[400px]
+                  bg-white p-4">
       <div className="flex justify-around items-center">
         {menuItems.map((item) => {
           // 현재 경로(location.pathname)와 메뉴의 경로가 일치하는지 확인

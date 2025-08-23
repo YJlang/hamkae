@@ -40,8 +40,10 @@ const Mappage = () => {
                 <img src='/plusBtn.svg' alt='btn'></img>
                </button>
 
+                {/* 김혜린 수정 2025-08-23 */}
+                {/* 말풍선 위치 수정함. 확인 필요. 안 맞으면 lg: top 부분 수정해주기기 */}
                 {/* 말풍선 */}
-               <div className={`absolute z-50 right-6 top-115 md:right-55 lg:right-153
+               <div className={`absolute z-50 right-6 top-115 md:right-55 lg:right-153 top-120
                transition ${open ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"}`}>
                     <button
                         type='button'

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { authAPI } from '../lib/authAPI';
 import { useAuth } from '../lib/authContext.jsx';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Login = ({ onLoginSuccess }) => {
     const navigate = useNavigate();
@@ -14,6 +14,21 @@ const Login = ({ onLoginSuccess }) => {
     });
       
     const [loading, setLoading] = useState(false);
+
+    /* 
+    작업자: 김혜린린
+    수정내용: 로그인 폼 애니메이션 상태 추가 - 아래에서 위로 슬라이드 효과
+    */
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        // 컴포넌트 마운트 시 애니메이션 시작
+        const timer = setTimeout(() => {
+            setIsVisible(true);
+        }, 100);
+        
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleChange = (e) => {
         setFormData({
@@ -43,8 +58,9 @@ const Login = ({ onLoginSuccess }) => {
                 // useAuth를 통해 인증 상태 업데이트
                 login(token, displayName);
                 
+                //김혜린 수정 2025-08-23
                 // 로그인 성공 알림 및 콜백 호출
-                alert('로그인 완료!');
+                alert('로그인이 완료되었습니다!');
                 onLoginSuccess(displayName);
             } else {
                 alert(response.message || '로그인에 실패했습니다.');
@@ -69,9 +85,19 @@ const Login = ({ onLoginSuccess }) => {
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0">
+                    {/* 
+                    작업자: 김혜린
+                    날짜: 2025-08-23
+                    수정내용: 로그인 폼에 애니메이션 클래스 추가 - 아래에서 위로 슬라이드 및 페이드인 효과
+                    근데 될지는 모르니까 확인 필요. 안되면 삭제. 
+                    */}
                     <div
-                    className="mx-auto w-full max-w-sm bg-white rounded-t-[28px] shadow-[0_-10px_30px_rgba(0,0,0,0.15)]
-                                px-5 pt-6 pb-8"
+                    className={`mx-auto w-full max-w-sm bg-white rounded-t-[28px] shadow-[0_-10px_30px_rgba(0,0,0,0.15)]
+                                    px-5 pt-6 pb-8 transform transition-all duration-700 ease-out ${
+                                        isVisible 
+                                            ? 'translate-y-0 opacity-100' 
+                                            : 'translate-y-full opacity-0'
+                                }`}
                     style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
                     >
                         <form onSubmit={handleSubmit}>

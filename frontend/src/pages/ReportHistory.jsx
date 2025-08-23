@@ -147,7 +147,6 @@ const ReportHistory = () => {
           </button>
           <h1 className="text-[28px] font-extrabold tracking-tight">제보내역</h1>
         </div>
-        <p className="text-sm opacity-90 mt-2">내가 제보한 쓰레기 위치들</p>
       </div>
 
       {/* 본문 */}

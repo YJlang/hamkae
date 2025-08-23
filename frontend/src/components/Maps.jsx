@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
 import { markerAPI } from '../lib/markerAPI';
 import { getImageUrl, getImageUrlWithFallback } from '../lib/apiClient';
+import { getAddressFromCoords } from '../lib/mapUtils';
 
 const Maps = ({ newMarker }) => {
     const mapRef = useRef(null);
@@ -320,13 +321,32 @@ const Maps = ({ newMarker }) => {
                     `;
                 }
                 
-                // 주소 정보 생성 (좌표를 주소로 변환)
+                /* 
+                작업자: 김혜린
+                수정내용: 위도/경도를 한글 주소로 변환하여 인포윈도우에 표시
+                2025-08-23
+                */
                 let addressInfo = '';
                 if (activeMarker.lat && activeMarker.lng) {
-                    // 간단한 주소 표시 (좌표 기반)
+                    // 위도/경도를 주소로 변환
+                    getAddressFromCoords(activeMarker.lat, activeMarker.lng)
+                        .then(address => {
+                            const distInfo = document.getElementById('address-info');
+                            if (distInfo) {
+                                distInfo.innerHTML = `📍 위치: ${address}`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('주소 변환 실패:', error);
+                            const distInfo = document.getElementById('address-info');
+                            if (distInfo) {
+                                distInfo.innerHTML = `📍 위치: ${activeMarker.lat}, ${activeMarker.lng}`;
+                            }
+                        });
+                    
                     addressInfo = `
-                        <div style="margin-bottom:8px; font-size:12px; color:#666; border-top: 1px solid #eee; padding-top: 8px;">
-                            📍 위치: ${activeMarker.lat.toFixed(6)}, ${activeMarker.lng.toFixed(6)}
+                        <div id="address-info" style="font-size:12px; margin-bottom:8px; text-align:center; font-weight:500; height:16px; color:#666;">
+                            📍 위치: 주소 확인 중...
                         </div>
                     `;
                 }

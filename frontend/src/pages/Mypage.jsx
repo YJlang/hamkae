@@ -98,11 +98,6 @@ const Mypage = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const handlePointAdjustment = async () => {
     if (!newPoints || isNaN(newPoints) || newPoints < 0) {
       alert('유효한 포인트 값을 입력해주세요.');
@@ -207,7 +202,7 @@ const Mypage = () => {
           
           <hr className="border-[#73C03F] border my-6" />
         </div>
-
+          {/* 로그아웃 버튼 삭제. 김혜린 수정 2025-08-23 */}
         {/* 메뉴 버튼들 */}
         <div className="flex flex-col gap-3">
           <button onClick={() => navigate('/report-history')} className="w-full bg-[#73C03F] text-white rounded-xl py-4 font-medium flex justify-between items-center">
@@ -221,9 +216,6 @@ const Mypage = () => {
           </button>
           <button onClick={() => navigate('/point-exchange')} className="w-full bg-[#73C03F] text-white rounded-xl py-4 font-medium flex justify-between items-center">
             <span className="pl-3">포인트 전환</span><span className="text-2xl pr-2">{'>'}</span>
-          </button>
-          <button onClick={handleLogout} className="w-full bg-[#73C03F] text-white rounded-xl py-4 font-medium flex justify-between items-center">
-            <span className="pl-3">로그아웃</span><span className="text-2xl pr-2">{'>'}</span>
           </button>
         </div>
       </div>

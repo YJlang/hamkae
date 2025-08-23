@@ -20,21 +20,28 @@ const Mainpage = () => {
         }
     }, [username, isAuthenticated]);
 
+    //김혜린 수정 2025-08-23
+    //로그아웃 버튼 누르면 로컬스토리지에서 토큰 제거
     // 로그아웃 처리
     const handleLogout = () => {
         if (window.confirm('로그아웃 하시겠습니까?')) {
+            // localStorage에서 직접 토큰 제거
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
             logout();
             navigate('/login');
         }
     };
 
+    //김혜린 수정 2025-08-23
+    //쓰레기 이미지 수정
     const places = [
         {
             id: 1,
             title: "안양시 만안구 성결대학교 44",
             address: "내 집 앞 쓰레기...",
-            imageUrl: "sample/tresh-1.jpg",
-            point: 300,
+            imageUrl: "/6.png",
+            point: 100,
             distance: 8, // m 단위 예시
         },
         {
@@ -42,15 +49,15 @@ const Mainpage = () => {
             title: "경기도 안양시 동안구 관양동 53",
             address: "골목가 쓰레기 더미",
             imageUrl: "sample/tresh-1.jpg",
-            point: 300,
+            point: 100,
             distance: 25,
         },
         {
             id: 3,
             title: "경기도 안양시 만안구 성결…",
             address: "계단 앞 무단투기",
-            imageUrl: "sample/tresh-1.jpg",
-            point: 300,
+            imageUrl: "/14.png",
+            point: 100,
             distance: 5,
         },
     ];
@@ -62,12 +69,17 @@ const Mainpage = () => {
                     <div className='flex justify-between '>
                         <p className='font-bold text-xl p-4 mt-4 text-white'>함께줍줍</p>
                         <div className='mr-4 mt-4 ml-auto flex items-center gap-2'>
-                            <button
-                                type='button'
-                                onClick={() => navigate("/mypage")}
-                            >
-                                <img src='/account_circle.png' alt='회원' className='w-7'/>
-                            </button>
+                            {isAuthenticated && (
+                                    <button
+                                        onClick={handleLogout}
+                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        로그아웃
+                                    </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -81,25 +93,14 @@ const Mainpage = () => {
                     />
                     <img src='/hamkae-earth.png' alt='hamkae' className='absolute z-50 top-6 right-50 '/>
                     
+                    //김혜린 수정 2025-08-23 
+                    //로그아웃 버튼 위로 옮김 
                     {/* 인사 카드 */}
                     <div className="absolute -bottom-70 w-full flex justify-center">
                         <div className="bg-white rounded-t-3xl p-6 w-full max-w-lg">
-                            <div className="flex justify-between items-center mb-4">
                                 <div className="border-2 border-[#73C03F] rounded-2xl py-2 px-4 text-center font-semibold">
-                                    반갑습니다. {displayName}님
+                                    반갑습니다. {displayName || '사용자'}님
                                 </div>
-                                {isAuthenticated && (
-                                    <button
-                                        onClick={handleLogout}
-                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                        </svg>
-                                        로그아웃
-                                    </button>
-                                )}
-                            </div>
 
                             <div className="flex justify-between items-center mb-3 mt-5">
                                 <h2 className="font-semibold">근처 청소 할만한 곳</h2>
