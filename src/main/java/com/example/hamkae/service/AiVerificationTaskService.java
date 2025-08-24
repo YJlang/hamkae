@@ -68,8 +68,12 @@ public class AiVerificationTaskService {
                 afterPhoto.reject("AI 검증 실패: " + result.getErrorMessage());
             }
 
+            // AI 검증 결과가 적용된 사진을 데이터베이스에 저장
             photoRepository.save(afterPhoto);
-            log.info("[ASYNC] AI 검증 완료: markerId={}, 결과={}", markerId, result.getVerificationResult());
+            log.info("[ASYNC] AI 검증 완료: markerId={}, 결과={}, gptResponse={}, verifiedAt={}", 
+                    markerId, result.getVerificationResult(), 
+                    afterPhoto.getGptResponse() != null ? "저장됨" : "저장안됨",
+                    afterPhoto.getVerifiedAt());
 
         } catch (Exception e) {
             log.error("[ASYNC] AI 검증 중 오류: markerId={}, userId={}", markerId, userId, e);
@@ -91,13 +95,13 @@ public class AiVerificationTaskService {
             Photo photo = photoRepository.findById(photoId)
                     .orElseThrow(() -> new IllegalStateException("사진을 찾을 수 없습니다: " + photoId));
             
-            // 기본 포인트: 100pt
-            Integer basePoints = 100;
+            // 기본 포인트: 5000pt (기존 100pt에서 증가)
+            Integer basePoints = 5000;
             
-            // 신뢰도에 따른 보너스 포인트 계산 (80% 이상 시 20pt 추가)
+            // 신뢰도에 따른 보너스 포인트 계산 (80% 이상 시 1000pt 추가)
             Integer bonusPoints = 0;
             if (verificationResult.getConfidence() != null && verificationResult.getConfidence() >= 0.8) {
-                bonusPoints = 20;
+                bonusPoints = 1000;
             }
             
             Integer totalPoints = basePoints + bonusPoints;

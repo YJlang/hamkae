@@ -52,13 +52,14 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
-    public ResponseEntity<ApiResponse<UserProfileResponseDTO>> getMyProfile(
+    public ResponseEntity<ApiResponse<UserProfileResponseDTO>> getProfile(
             @Parameter(description = "JWT 토큰", required = true)
             @RequestHeader("Authorization") String authorization) {
         
+        String username = null;
         try {
             String token = authorization.replace("Bearer ", "");
-            String username = jwtUtil.validateAndGetUsername(token);
+            username = jwtUtil.validateAndGetUsername(token);
             User user = userService.findByUsername(username);
             
             // 포인트 통계 조회
@@ -72,9 +73,18 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success("사용자 프로필 조회 성공", response));
             
         } catch (Exception e) {
-            log.error("사용자 프로필 조회 실패", e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("사용자 프로필 조회에 실패했습니다: " + e.getMessage()));
+            log.error("사용자 프로필 조회 실패: username={}, error={}", username, e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("사용자를 찾을 수 없습니다")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("토큰")) {
+                errorMessage = "인증이 만료되었습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "사용자 정보를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -101,9 +111,18 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success("포인트 현황 조회 성공", response));
             
         } catch (Exception e) {
-            log.error("포인트 현황 조회 실패", e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("포인트 현황 조회에 실패했습니다: " + e.getMessage()));
+            log.error("포인트 현황 조회 실패: error={}", e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("사용자를 찾을 수 없습니다")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("토큰")) {
+                errorMessage = "인증이 만료되었습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "포인트 현황을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -142,9 +161,18 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success("활동 요약 조회 성공", summary));
             
         } catch (Exception e) {
-            log.error("활동 요약 조회 실패", e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("활동 요약 조회에 실패했습니다: " + e.getMessage()));
+            log.error("활동 요약 조회 실패: error={}", e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("사용자를 찾을 수 없습니다")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("토큰")) {
+                errorMessage = "인증이 만료되었습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "활동 요약을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -213,9 +241,18 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success("포인트 설정 완료", result));
             
         } catch (Exception e) {
-            log.error("포인트 설정 실패", e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("포인트 설정에 실패했습니다: " + e.getMessage()));
+            log.error("포인트 설정 실패: error={}", e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("사용자를 찾을 수 없습니다")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("토큰")) {
+                errorMessage = "인증이 만료되었습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "포인트 설정에 실패했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -262,9 +299,18 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success("포인트 설정 완료 (GET 방식)", result));
             
         } catch (Exception e) {
-            log.error("포인트 설정 실패 (GET)", e);
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("포인트 설정에 실패했습니다: " + e.getMessage()));
+            log.error("포인트 설정 실패 (GET): error={}", e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("사용자를 찾을 수 없습니다")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("토큰")) {
+                errorMessage = "인증이 만료되었습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "포인트 설정에 실패했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 

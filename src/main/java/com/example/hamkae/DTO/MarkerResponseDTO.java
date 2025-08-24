@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -65,6 +67,11 @@ public class MarkerResponseDTO {
     private LocalDateTime createdAt;
 
     /**
+     * 마커 정보 수정일시
+     */
+    private LocalDateTime updatedAt;
+
+    /**
      * 마커에 연결된 사진들 (간단한 정보만)
      */
     private List<PhotoSimpleDTO> photos;
@@ -76,6 +83,10 @@ public class MarkerResponseDTO {
      * @return MarkerResponseDTO 객체
      */
     public static MarkerResponseDTO from(Marker marker) {
+        // 디버깅: 주소 정보 확인
+        String markerAddress = marker.getAddress();
+        System.out.println("[DEBUG] MarkerResponseDTO.from - 마커 ID: " + marker.getId() + ", 주소: " + markerAddress);
+        
         return MarkerResponseDTO.builder()
                 .id(marker.getId())
                 .lat(marker.getLat())
@@ -84,6 +95,7 @@ public class MarkerResponseDTO {
                 .address(marker.getAddress())
                 .status(marker.getStatus().name())
                 .createdAt(marker.getCreatedAt())
+                .updatedAt(marker.getUpdatedAt())
                 .reporter(ReporterInfoDTO.from(marker.getReportedBy()))
                 .photos(marker.getPhotos().stream()
                         .map(PhotoSimpleDTO::from)
@@ -98,17 +110,38 @@ public class MarkerResponseDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @Getter
+    @Setter
     public static class PhotoSimpleDTO {
         private Long id;
         private String type;
         private String imagePath;
+        private String gptResponse; // GPT API 응답 결과 추가
+        private LocalDateTime verifiedAt; // AI 검증 완료 시점 추가
 
         public static PhotoSimpleDTO from(com.example.hamkae.domain.Photo photo) {
+            // 디버깅: GPT 응답과 검증 시점 확인
+            System.out.println("[DEBUG] PhotoSimpleDTO.from - 사진 ID: " + photo.getId() + 
+                             ", 타입: " + photo.getType() + 
+                             ", GPT 응답: " + (photo.getGptResponse() != null ? "있음" : "없음") + 
+                             ", 검증시점: " + photo.getVerifiedAt());
+            
             return PhotoSimpleDTO.builder()
                     .id(photo.getId())
                     .type(photo.getType().name())
                     .imagePath(photo.getImagePath())
+                    .gptResponse(photo.getGptResponse()) // GPT 응답 포함
+                    .verifiedAt(photo.getVerifiedAt()) // AI 검증 완료 시점 포함
                     .build();
+        }
+
+        // Lombok @Data가 제대로 작동하지 않을 경우를 대비한 수동 getter 메서드
+        public String getGptResponse() {
+            return this.gptResponse;
+        }
+
+        public LocalDateTime getVerifiedAt() {
+            return this.verifiedAt;
         }
     }
 

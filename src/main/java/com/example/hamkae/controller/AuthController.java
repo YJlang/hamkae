@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -31,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 @Tag(name = "인증 API", description = "사용자 회원가입 및 로그인 관련 API")
+@Slf4j
 public class AuthController {
 
     /**
@@ -77,9 +79,21 @@ public class AuthController {
             data.put("user_id", user.getId());
             
             return ResponseEntity.ok(ApiResponse.success("회원가입 성공", data));
-        } catch (RuntimeException e) {
-            // 에러 발생 시 400 Bad Request로 응답
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("회원가입 실패: username={}, error={}", request.getUsername(), e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("이미 존재합니다")) {
+                errorMessage = "이미 사용 중인 아이디입니다. 다른 아이디를 선택해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("비밀번호")) {
+                errorMessage = "비밀번호는 6자리 이상이어야 합니다.";
+            } else if (e.getMessage() != null && e.getMessage().contains("사용자명")) {
+                errorMessage = "사용자명은 2자리 이상이어야 합니다.";
+            } else {
+                errorMessage = "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -108,27 +122,42 @@ public class AuthController {
     })
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginRequestDTO request) {
         // 사용자 정보 검증
-        User user = userService.validateUser(request.getUsername(), request.getPassword());
-        if (user == null) {
-            // 로그인 실패 시 401 Unauthorized로 응답
-            return ResponseEntity.status(401).body(ApiResponse.error("아이디 또는 비밀번호가 올바르지 않습니다."));
+        try {
+            User user = userService.validateUser(request.getUsername(), request.getPassword());
+            if (user == null) {
+                // 로그인 실패 시 401 Unauthorized로 응답
+                return ResponseEntity.status(401).body(ApiResponse.error("아이디 또는 비밀번호가 올바르지 않습니다."));
+            }
+            
+            // JWT 토큰 생성
+            String token = jwtUtil.createToken(user.getUsername());
+            
+            // 응답 데이터 구성
+            Map<String, Object> data = new HashMap<>();
+            data.put("token", token);
+            
+            // 사용자 정보 구성
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("name", user.getName());
+            userInfo.put("points", user.getPoints());
+            data.put("user", userInfo);
+            
+            return ResponseEntity.ok(ApiResponse.success("로그인 성공", data));
+        } catch (RuntimeException e) {
+            log.error("로그인 실패: username={}, error={}", request.getUsername(), e.getMessage(), e);
+            
+            String errorMessage;
+            if (e.getMessage() != null && e.getMessage().contains("사용자를 찾을 수 없습니다")) {
+                errorMessage = "아이디 또는 비밀번호가 올바르지 않습니다.";
+            } else if (e.getMessage() != null && e.getMessage().contains("비밀번호가 일치하지 않습니다")) {
+                errorMessage = "아이디 또는 비밀번호가 올바르지 않습니다.";
+            } else {
+                errorMessage = "로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
-        
-        // JWT 토큰 생성
-        String token = jwtUtil.createToken(user.getUsername());
-        
-        // 응답 데이터 구성
-        Map<String, Object> data = new HashMap<>();
-        data.put("token", token);
-        
-        // 사용자 정보 구성
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("id", user.getId());
-        userInfo.put("name", user.getName());
-        userInfo.put("points", user.getPoints());
-        data.put("user", userInfo);
-        
-        return ResponseEntity.ok(ApiResponse.success("로그인 성공", data));
     }
 
     /**

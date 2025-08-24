@@ -86,6 +86,13 @@ public class Photo {
     private String gptResponse;
 
     /**
+     * AI 검증 완료 시점
+     * AI 검증이 완료된 시점을 저장
+     */
+    @Column
+    private LocalDateTime verifiedAt;
+
+    /**
      * 사진 업로드일시
      * 자동 생성되며 수정 불가
      */
@@ -140,6 +147,7 @@ public class Photo {
     public void approve(String gptResponse) {
         this.verificationStatus = VerificationStatus.APPROVED;
         this.gptResponse = gptResponse;
+        this.verifiedAt = LocalDateTime.now(); // AI 검증 완료 시점 설정
     }
 
     /**
@@ -150,6 +158,7 @@ public class Photo {
     public void reject(String gptResponse) {
         this.verificationStatus = VerificationStatus.REJECTED;
         this.gptResponse = gptResponse;
+        this.verifiedAt = LocalDateTime.now(); // AI 검증 완료 시점 설정
     }
 
     /**

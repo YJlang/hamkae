@@ -257,11 +257,23 @@ public class MarkerService {
         log.info("사용자 청소 인증 마커 조회: userId={}", userId);
         
         List<Marker> verifiedMarkers = markerRepository.findByReportedByIdAndStatus(userId, Marker.MarkerStatus.CLEANED);
+        log.info("조회된 CLEANED 상태 마커 수: {}", verifiedMarkers.size());
         
         List<MarkerResponseDTO> responseDTOs = verifiedMarkers.stream()
                 .map(marker -> {
+                    log.debug("마커 변환 시작: markerId={}, address={}, photosCount={}", 
+                            marker.getId(), marker.getAddress(), marker.getPhotos().size());
+                    
                     MarkerResponseDTO dto = MarkerResponseDTO.from(marker);
-                    log.debug("청소 인증 마커 변환: markerId={}, status={}", marker.getId(), marker.getStatus());
+                    
+                    log.debug("마커 변환 완료: markerId={}, dtoAddress={}, dtoPhotosCount={}", 
+                            marker.getId(), dto.getAddress(), dto.getPhotos().size());
+                    
+                    // 사진 정보 상세 로깅
+                    if (dto.getPhotos() != null) {
+                        log.debug("마커 {}의 사진 수: {}", marker.getId(), dto.getPhotos().size());
+                    }
+                    
                     return dto;
                 })
                 .collect(Collectors.toList());

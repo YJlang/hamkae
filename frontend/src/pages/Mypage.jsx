@@ -10,9 +10,7 @@ const Mypage = () => {
   const { token, logout, username: authUsername } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showPointModal, setShowPointModal] = useState(false);
-  const [newPoints, setNewPoints] = useState('');
-  const [pointLoading, setPointLoading] = useState(false);
+  // 테스트용 포인트 조정 관련 상태 변수들 제거
 
   // 인증 확인
   useEffect(() => {
@@ -98,36 +96,6 @@ const Mypage = () => {
     }
   };
 
-  const handlePointAdjustment = async () => {
-    if (!newPoints || isNaN(newPoints) || newPoints < 0) {
-      alert('유효한 포인트 값을 입력해주세요.');
-      return;
-    }
-
-    try {
-      setPointLoading(true);
-      const response = await userAPI.setPointsForTesting(parseInt(newPoints));
-      
-      if (response.success) {
-        alert(`포인트가 성공적으로 조정되었습니다!\n기존: ${response.data.oldPoints}P → 새로운: ${response.data.newPoints}P`);
-        
-        // 사용자 프로필 새로고침
-        await loadUserData();
-        
-        // 모달 닫기
-        setShowPointModal(false);
-        setNewPoints('');
-      } else {
-        alert('포인트 조정에 실패했습니다: ' + response.message);
-      }
-    } catch (error) {
-      console.error('포인트 조정 실패:', error);
-      alert('포인트 조정에 실패했습니다: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setPointLoading(false);
-    }
-  };
-
   // 초기 디자인은 상세 날짜/타입 색상 등이 필요 없으므로 보조 함수 제거
 
   if (loading) {
@@ -179,12 +147,7 @@ const Mypage = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-medium text-[#73C03F]">보유 포인트</p>
-            <button 
-              onClick={() => setShowPointModal(true)}
-              className="text-xs text-[#73C03F] hover:text-[#5a9a2f] underline"
-            >
-              테스트용 조정
-            </button>
+            {/* 테스트용 포인트 조정 버튼 삭제 */}
           </div>
           <p className="text-4xl font-extrabold text-[#73C03F] leading-none">
             {userProfile?.currentPoints || 0} <span className="text-sm font-medium align-top">P</span>
@@ -220,50 +183,7 @@ const Mypage = () => {
         </div>
       </div>
 
-      {/* 포인트 조정 모달 */}
-      {showPointModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-80 mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">테스트용 포인트 조정</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              개발/테스트를 위한 포인트 조정 기능입니다.
-            </p>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                새로운 포인트
-              </label>
-              <input
-                type="number"
-                value={newPoints}
-                onChange={(e) => setNewPoints(e.target.value)}
-                placeholder="예: 10000"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#73C03F] focus:border-transparent"
-                min="0"
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowPointModal(false);
-                  setNewPoints('');
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={handlePointAdjustment}
-                disabled={pointLoading || !newPoints}
-                className="flex-1 px-4 py-2 bg-[#73C03F] text-white rounded-lg hover:bg-[#5a9a2f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {pointLoading ? '처리중...' : '적용'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 포인트 조정 모달 삭제 */}
 
       {/* 하단 네비게이션 */}
       <Navbar />

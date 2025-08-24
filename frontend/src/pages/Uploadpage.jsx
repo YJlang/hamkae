@@ -5,6 +5,7 @@ import { aiVerificationAPI } from '../lib/aiVerificationAPI';
 import { getImageUrl } from '../lib/apiClient';
 import { useAuth } from '../lib/authContext.jsx';
 import { photosAPI } from '../lib/photosAPI'; // photosAPI 추가
+import { getAddressFromCoords } from '../lib/mapUtils'; // mapUtils에서 주소 조회 함수 import
 
 const Uploadpage = () => {
   const { markerId } = useParams();
@@ -35,10 +36,27 @@ const Uploadpage = () => {
     }
   }, [markerId]);
 
+  // 주소가 없을 때 좌표로부터 주소를 조회하는 useEffect
+  useEffect(() => {
+    if (marker && !marker.address && marker.lat && marker.lng) {
+      console.log('🔄 주소 조회 useEffect 실행 - 마커:', marker.id);
+      fetchAddressIfNeeded();
+    }
+  }, [marker]);
+
   const loadMarkerData = async () => {
     try {
       const res = await markerAPI.get(markerId);
       const markerData = res?.data?.data || res?.data || res;
+      
+      console.log('마커 데이터 로드 결과:', {
+        originalResponse: res,
+        parsedMarkerData: markerData,
+        address: markerData?.address,
+        description: markerData?.description,
+        reporter: markerData?.reporter
+      });
+      
       setMarker(markerData);
       
       // BEFORE 사진들 필터링 (BEFORE, before, 또는 type이 없는 경우)
@@ -89,18 +107,45 @@ const Uploadpage = () => {
         setGptResponse(statusData.gptResponse || '');
         
         // 이미 검증이 완료된 경우 결과 설정
-        if (statusData.verificationStatus === 'APPROVED' || statusData.verificationStatus === 'REJECTED') {
-          setVerificationResult(statusData.verificationStatus);
-          console.log('기존 검증 결과 발견:', statusData.verificationStatus);
+        if (statusData.verificationStatus === 'COMPLETED') {
+          setVerificationResult(statusData.verificationResult || 'UNKNOWN');
         }
       }
     } catch (error) {
       console.error('검증 상태 확인 실패:', error);
-      console.error('에러 상세:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
+    }
+  };
+
+  // 주소가 없을 때 좌표로부터 주소를 조회하는 함수 (mapUtils 사용)
+  const fetchAddressIfNeeded = async () => {
+    if (!marker || marker.address) {
+      console.log('📍 이미 주소가 있음:', marker?.address);
+      return;
+    }
+    
+    if (!marker.lat || !marker.lng) {
+      console.log('📍 좌표 정보 없음:', { lat: marker?.lat, lng: marker?.lng });
+      return;
+    }
+    
+    console.log('📍 주소 조회 시작 (mapUtils 사용):', { 
+      id: marker.id, 
+      lat: marker.lat, 
+      lng: marker.lng 
+    });
+    
+    try {
+      // mapUtils의 getAddressFromCoords 함수 사용 (SDK 기반)
+      const address = await getAddressFromCoords(marker.lat, marker.lng);
+      if (address && address !== "주소를 찾을 수 없습니다." && address !== "주소 변환 중 오류가 발생했습니다.") {
+        // 주소를 상태에 업데이트
+        setMarker(prev => ({ ...prev, address: address }));
+        console.log('✅ 주소 업데이트 완료 (SDK):', { id: marker.id, address });
+      } else {
+        console.log('⚠️ 주소 조회 실패 또는 유효하지 않은 주소:', address);
+      }
+    } catch (error) {
+      console.error('❌ 주소 조회 실패 (SDK):', error);
     }
   };
 
@@ -277,6 +322,152 @@ const Uploadpage = () => {
     }));
   };
 
+  // GPT 응답을 파싱하는 함수 (더 강화된 버전)
+  const parseGptResponse = (gptResponse) => {
+    if (!gptResponse || typeof gptResponse !== 'string') {
+      return null;
+    }
+
+    try {
+      // 1단계: 기본 정리
+      let cleanedResponse = gptResponse
+        .replace(/\\n/g, ' ')           // 줄바꿈 제거
+        .replace(/\\"/g, '"')           // 이스케이프된 따옴표 정리
+        .replace(/\\t/g, ' ')          // 탭 제거
+        .replace(/\\r/g, ' ')          // 캐리지 리턴 제거
+        .replace(/\s+/g, ' ')          // 연속된 공백을 하나로
+        .trim();                        // 앞뒤 공백 제거
+
+      // 2단계: 여러 JSON 객체 찾기 (가장 깊은 중첩된 JSON 찾기)
+      let bestJsonString = null;
+      let maxDepth = 0;
+      
+      // 중괄호 쌍을 찾아서 가장 깊은 JSON 추출
+      const findDeepestJson = (text) => {
+        const stack = [];
+        let start = -1;
+        let depth = 0;
+        
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === '{') {
+            if (stack.length === 0) {
+              start = i;
+            }
+            stack.push('{');
+            depth = Math.max(depth, stack.length);
+          } else if (text[i] === '}') {
+            if (stack.length > 0) {
+              stack.pop();
+              if (stack.length === 0 && start !== -1) {
+                // 완전한 JSON 객체 발견
+                const jsonCandidate = text.substring(start, i + 1);
+                try {
+                  const parsed = JSON.parse(jsonCandidate);
+                  // verification_result나 confidence가 있는지 확인
+                  if (parsed.verification_result || parsed.confidence || parsed.reason) {
+                    if (depth > maxDepth) {
+                      maxDepth = depth;
+                      bestJsonString = jsonCandidate;
+                    }
+                  }
+                } catch (e) {
+                  // 이 JSON은 파싱 실패, 계속 진행
+                }
+                start = -1;
+              }
+            }
+          }
+        }
+      };
+      
+      findDeepestJson(cleanedResponse);
+      
+      if (!bestJsonString) {
+        throw new Error('유효한 JSON을 찾을 수 없습니다');
+      }
+      
+      console.log('🔍 추출된 JSON:', bestJsonString);
+      
+      // 3단계: 파싱 시도
+      const parsed = JSON.parse(bestJsonString);
+      
+      // 4단계: 필요한 정보만 추출
+      const result = {};
+      
+      // 신뢰도 처리
+      if (parsed.confidence !== undefined) {
+        result.confidence = Math.round(parsed.confidence * 100);
+      }
+      
+      // 이유/설명 처리 (reason 필드 우선)
+      if (parsed.reason) {
+        result.reasoning = parsed.reason;
+      } else if (parsed.reasoning) {
+        result.reasoning = parsed.reasoning;
+      } else if (parsed.explanation) {
+        result.reasoning = parsed.explanation;
+      } else if (parsed.comment) {
+        result.reasoning = parsed.comment;
+      }
+      
+      console.log('✅ 파싱 성공:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('GPT 응답 파싱 실패:', error);
+      console.log('원본 응답:', gptResponse);
+      
+      // 파싱 실패 시 간단한 텍스트 추출
+      try {
+        // JSON이 아닌 경우에도 유용한 정보 추출
+        if (gptResponse.includes('APPROVED')) {
+          return { verification_result: 'APPROVED', confidence: 90 };
+        } else if (gptResponse.includes('REJECTED')) {
+          return { verification_result: 'REJECTED', confidence: 0 };
+        }
+        
+        // 신뢰도 숫자 추출
+        const confidenceMatch = gptResponse.match(/(\d+\.?\d*)/);
+        if (confidenceMatch) {
+          const confidence = Math.round(parseFloat(confidenceMatch[1]) * 100);
+          return { confidence, verification_result: 'UNKNOWN' };
+        }
+        
+      } catch (fallbackError) {
+        console.error('Fallback 파싱도 실패:', fallbackError);
+      }
+      
+      return { 
+        verification_result: 'UNKNOWN',
+        raw: gptResponse.substring(0, 100) + '...'
+      };
+    }
+  };
+
+  // 한국 시간대로 변환하는 함수
+  const formatKoreanTime = (dateString) => {
+    if (!dateString) return '-';
+    
+    try {
+      const date = new Date(dateString);
+      
+      // 한국 시간대 (UTC+9)로 변환
+      const koreanTime = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+      
+      return koreanTime.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Seoul'
+      });
+    } catch (error) {
+      console.error('시간 변환 실패:', error);
+      return dateString;
+    }
+  };
+
   if (!marker) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -303,8 +494,18 @@ const Uploadpage = () => {
         <div className='flex mb-3 items-center'>
           <img src='/marker.png' className='ml-2 w-3 h-4 mr-2' alt="위치 마커"/>
           <span className='font-bold text-xl px-2 mr-2'>
-            {/* 위치정보가 자꾸 코멘트로 떠서 지워버림. 김혜린 수정 2025-08-23 */}
-            {marker?.address || '위치 정보'}
+            {marker?.address ? (
+              // 주소가 있으면 표시 (실제 주소 또는 fallback 위치 정보)
+              marker.address.includes('📍') ? (
+                <span className="text-blue-600">{marker.address}</span>
+              ) : (
+                marker.address
+              )
+            ) : marker?.lat && marker?.lng ? (
+              <span className="text-blue-500">📍 좌표로부터 주소 조회 중...</span>
+            ) : (
+              <span className="text-gray-500">⚠️ 위치 정보를 불러오는 중...</span>
+            )}
           </span>
         </div>
         
@@ -477,7 +678,7 @@ const Uploadpage = () => {
                   
                   {verificationResult === 'APPROVED' && (
                     <div className="text-green-700 text-sm">
-                      <p>축하합니다! 100포인트가 적립되었습니다. 🎉</p>
+                      <p>축하합니다! 5000포인트가 적립되었습니다. 🎉</p>
                     </div>
                   )}
                 </div>

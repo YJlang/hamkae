@@ -39,7 +39,7 @@ public class GptVerificationService {
     @Value("${openai.api.max-tokens:800}")
     private Integer maxTokens;
 
-    @Value("${ai.verification.points.reward:100}")
+    @Value("${ai.verification.points.reward:5000}")
     private Integer pointsReward;
 
     @Value("${app.base-url:http://localhost:8080}")

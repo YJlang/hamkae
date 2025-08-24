@@ -106,7 +106,21 @@ public class MarkerController {
             return ResponseEntity.ok(ApiResponse.success("마커 등록 완료", data));
             
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("마커 등록 실패: " + e.getMessage()));
+            log.error("마커 등록 실패: userId={}, error={}", userId, e.getMessage(), e);
+            
+            // 구체적인 에러 메시지 제공
+            String errorMessage;
+            if (e instanceof IllegalArgumentException) {
+                errorMessage = "입력 데이터가 올바르지 않습니다: " + e.getMessage();
+            } else if (e.getMessage() != null && e.getMessage().contains("파일")) {
+                errorMessage = "파일 업로드 중 오류가 발생했습니다. 파일을 다시 확인해주세요.";
+            } else if (e.getMessage() != null && e.getMessage().contains("위치")) {
+                errorMessage = "위치 정보가 올바르지 않습니다. GPS를 다시 확인해주세요.";
+            } else {
+                errorMessage = "마커 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -181,7 +195,17 @@ public class MarkerController {
             return ResponseEntity.ok(ApiResponse.success("제보내역 조회 완료", markers));
         } catch (Exception e) {
             log.error("제보내역 조회 실패: userId={}", userId, e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("제보내역 조회 실패: " + e.getMessage()));
+            
+            String errorMessage;
+            if (e instanceof IllegalArgumentException) {
+                errorMessage = "잘못된 요청입니다: " + e.getMessage();
+            } else if (e.getMessage() != null && e.getMessage().contains("사용자")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "제보내역을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -217,7 +241,17 @@ public class MarkerController {
             return ResponseEntity.ok(ApiResponse.success("인증내역 조회 완료", markers));
         } catch (Exception e) {
             log.error("인증내역 조회 실패: userId={}", userId, e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("인증내역 조회 실패: " + e.getMessage()));
+            
+            String errorMessage;
+            if (e instanceof IllegalArgumentException) {
+                errorMessage = "잘못된 요청입니다: " + e.getMessage();
+            } else if (e.getMessage() != null && e.getMessage().contains("사용자")) {
+                errorMessage = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            } else {
+                errorMessage = "인증내역을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -255,7 +289,20 @@ public class MarkerController {
             markerService.deleteMarker(id, userId);
             return ResponseEntity.ok(ApiResponse.success("마커와 연결된 모든 사진이 완전히 삭제되었습니다."));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("마커 삭제 실패: " + e.getMessage()));
+            log.error("마커 삭제 실패: markerId={}, userId={}, error={}", id, userId, e.getMessage(), e);
+            
+            String errorMessage;
+            if (e instanceof IllegalArgumentException) {
+                errorMessage = "잘못된 요청입니다: " + e.getMessage();
+            } else if (e.getMessage() != null && e.getMessage().contains("권한")) {
+                errorMessage = "이 마커를 삭제할 권한이 없습니다. 본인이 제보한 마커만 삭제할 수 있습니다.";
+            } else if (e.getMessage() != null && e.getMessage().contains("찾을 수 없습니다")) {
+                errorMessage = "삭제할 마커를 찾을 수 없습니다. 이미 삭제되었거나 존재하지 않습니다.";
+            } else {
+                errorMessage = "마커 삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 
@@ -303,8 +350,22 @@ public class MarkerController {
             log.info("마커 상태 변경 성공: markerId={}, status={}, userId={}", id, status, userId);
             return ResponseEntity.ok(ApiResponse.success("마커 상태가 성공적으로 변경되었습니다."));
         } catch (Exception e) {
-            log.error("마커 상태 변경 실패: markerId={}, status={}, userId={}", id, status, userId, e);
-            return ResponseEntity.badRequest().body(ApiResponse.error("마커 상태 변경 실패: " + e.getMessage()));
+            log.error("마커 상태 변경 실패: markerId={}, status={}, userId={}, error={}", id, status, userId, e.getMessage(), e);
+            
+            String errorMessage;
+            if (e instanceof IllegalArgumentException) {
+                errorMessage = "잘못된 상태 값입니다: " + e.getMessage();
+            } else if (e.getMessage() != null && e.getMessage().contains("권한")) {
+                errorMessage = "이 마커의 상태를 변경할 권한이 없습니다.";
+            } else if (e.getMessage() != null && e.getMessage().contains("찾을 수 없습니다")) {
+                errorMessage = "상태를 변경할 마커를 찾을 수 없습니다.";
+            } else if (e.getMessage() != null && e.getMessage().contains("지원하지 않는")) {
+                errorMessage = "지원하지 않는 마커 상태입니다: " + status;
+            } else {
+                errorMessage = "마커 상태 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+            
+            return ResponseEntity.badRequest().body(ApiResponse.error(errorMessage));
         }
     }
 }
