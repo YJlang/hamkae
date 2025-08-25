@@ -390,7 +390,7 @@ const VerificationHistory = () => {
       </div>
 
       {/* 본문 */}
-      <div className="flex-none overflow-auto bg-white rounded-t-[20px] -mt-10 px-6 pt-8 mb-10 shadow-md">
+      <div className="flex-none overflow-auto bg-white rounded-t-[20px] -mt-10 px-6 pt-8 pb-10 shadow-md">
         인증내역
       </div>
       <div className="flex-1 overflow-auto bg-white px-6 pt-4 pb-4">
