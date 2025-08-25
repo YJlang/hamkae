@@ -8,10 +8,20 @@ import { getAddressFromCoords } from '../lib/mapUtils'; // mapUtils에서 주소
 
 const VerificationHistory = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, username: authUsername } = useAuth();
   const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // 사용자명 결정 함수 (Mypage.jsx와 동일한 로직)
+  const getDisplayName = () => {
+    // 1순위: useAuth의 username (로그인 시 저장된 값)
+    if (authUsername) {
+      return authUsername;
+    }
+    // 2순위: 기본값
+    return '사용자';
+  };
 
   useEffect(() => {
     if (!token) {

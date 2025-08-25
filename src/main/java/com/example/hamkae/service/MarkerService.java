@@ -6,6 +6,7 @@ import com.example.hamkae.domain.User;
 import com.example.hamkae.DTO.MarkerRequestDTO;
 import com.example.hamkae.DTO.MarkerResponseDTO;
 import com.example.hamkae.repository.MarkerRepository;
+import com.example.hamkae.repository.PhotoRepository;
 import com.example.hamkae.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class MarkerService {
     private final MarkerRepository markerRepository;
     private final UserRepository userRepository;
     private final FileUploadService fileUploadService;
+    private final PhotoRepository photoRepository;
 
     /**
      * 새로운 마커를 등록합니다.
@@ -254,31 +256,31 @@ public class MarkerService {
      * @return 청소 인증된 마커 목록
      */
     public List<MarkerResponseDTO> getVerifiedMarkersByUserId(Long userId) {
-        log.info("사용자 청소 인증 마커 조회: userId={}", userId);
-        
-        List<Marker> verifiedMarkers = markerRepository.findByReportedByIdAndStatus(userId, Marker.MarkerStatus.CLEANED);
-        log.info("조회된 CLEANED 상태 마커 수: {}", verifiedMarkers.size());
-        
-        List<MarkerResponseDTO> responseDTOs = verifiedMarkers.stream()
-                .map(marker -> {
-                    log.debug("마커 변환 시작: markerId={}, address={}, photosCount={}", 
-                            marker.getId(), marker.getAddress(), marker.getPhotos().size());
-                    
-                    MarkerResponseDTO dto = MarkerResponseDTO.from(marker);
-                    
-                    log.debug("마커 변환 완료: markerId={}, dtoAddress={}, dtoPhotosCount={}", 
-                            marker.getId(), dto.getAddress(), dto.getPhotos().size());
-                    
-                    // 사진 정보 상세 로깅
-                    if (dto.getPhotos() != null) {
-                        log.debug("마커 {}의 사진 수: {}", marker.getId(), dto.getPhotos().size());
-                    }
-                    
-                    return dto;
-                })
+        log.info("사용자 청소 인증 마커 조회(청소자 기준): userId={}", userId);
+
+        // 청소자(userId)가 업로드한 AFTER 사진 중 APPROVED인 것들을 조회
+        List<Photo> approvedAfterPhotos = photoRepository
+                .findByUserIdAndTypeAndVerificationStatus(
+                        userId,
+                        Photo.PhotoType.AFTER,
+                        Photo.VerificationStatus.APPROVED
+                );
+
+        log.info("승인된 AFTER 사진 수: {}", approvedAfterPhotos.size());
+
+        // 해당 사진들의 마커를 수집하여 중복 제거
+        List<Marker> cleanedMarkers = approvedAfterPhotos.stream()
+                .map(Photo::getMarker)
+                .distinct()
                 .collect(Collectors.toList());
-        
-        log.info("사용자 청소 인증 마커 조회 완료: userId={}, count={}", userId, responseDTOs.size());
+
+        log.info("청소 완료로 간주되는 마커 수(중복 제거 후): {}", cleanedMarkers.size());
+
+        List<MarkerResponseDTO> responseDTOs = cleanedMarkers.stream()
+                .map(MarkerResponseDTO::from)
+                .collect(Collectors.toList());
+
+        log.info("사용자 청소 인증 마커 조회 완료(청소자 기준): userId={}, count={}", userId, responseDTOs.size());
         return responseDTOs;
     }
 }
