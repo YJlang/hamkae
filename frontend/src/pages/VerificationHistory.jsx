@@ -400,10 +400,7 @@ const VerificationHistory = () => {
       </div>
 
       {/* 본문 */}
-      <div className="flex-none overflow-auto bg-white rounded-t-[20px] -mt-10 px-6 pt-8 mb-10 shadow-md">
-        인증내역
-      </div>
-      <div className="flex-1 overflow-auto bg-white px-6 pt-4 pb-4">
+      <div className="flex-1 overflow-auto bg-white px-6 pt-8 pb-4">
         {verifications.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📸</div>
