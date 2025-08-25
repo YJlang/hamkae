@@ -142,7 +142,7 @@ const Mypage = () => {
       </div>
 
       {/* 본문 - 초기 카드 레이아웃 */}
-      <div className="flex-1 overflow-auto bg-white rounded-t-[28px] -mt-10 px-6 pt-8 pb-24 shadow-md flex flex-col">
+      <div className="flex-1 overflow-auto bg-white rounded-t-[28px] -mt-10 px-6 pt-8 pb-10 shadow-md flex flex-col">
         {/* 보유 포인트 */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
@@ -163,17 +163,19 @@ const Mypage = () => {
             </div>
           )}
           
-          <hr className="border-[#73C03F] border my-6" />
+          <hr className="border-[#73C03F] border my-4" />
         </div>
           {/* 로그아웃 버튼 삭제. 김혜린 수정 2025-08-23 */}
         {/* 메뉴 버튼들 */}
+        <div className="flex gap-3 mb-3">
+          <button onClick={() => navigate('/report-history')} className="flex-1 bg-[#73C03F] text-white rounded-xl py-8 font-semibold flex flex-col items-center">
+            <span>제보 내역</span>
+          </button>
+          <button onClick={() => navigate('/verification-history')} className="flex-1 bg-[#73C03F] text-white rounded-xl py-8 font-semibold flex flex-col items-center">
+            <span>인증 내역</span>
+          </button>
+        </div>
         <div className="flex flex-col gap-3">
-          <button onClick={() => navigate('/report-history')} className="w-full bg-[#73C03F] text-white rounded-xl py-4 font-medium flex justify-between items-center">
-            <span className="pl-3">제보 내역</span><span className="text-2xl pr-2">{'>'}</span>
-          </button>
-          <button onClick={() => navigate('/verification-history')} className="w-full bg-[#73C03F] text-white rounded-xl py-4 font-medium flex justify-between items-center">
-            <span className="pl-3">인증 내역</span><span className="text-2xl pr-2">{'>'}</span>
-          </button>
           <button onClick={() => navigate('/my-pins')} className="w-full bg-[#73C03F] text-white rounded-xl py-4 font-medium flex justify-between items-center">
             <span className="pl-3">내 핀번호</span><span className="text-2xl pr-2">{'>'}</span>
           </button>
