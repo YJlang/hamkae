@@ -60,4 +60,15 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
      * @return 해당 마커의 특정 타입 사진 개수
      */
     int countByMarkerIdAndType(Long markerId, Photo.PhotoType type);
+
+    /**
+     * 특정 사용자가 업로드한 청소 후(AFTER) 사진 중, 특정 검증 상태의 사진들을 조회합니다.
+     * 인증내역(청소내역) 조회 시 청소자 기준으로 마커를 찾기 위해 사용합니다.
+     *
+     * @param userId 사용자 ID (청소자)
+     * @param type 사진 타입 (AFTER)
+     * @param verificationStatus 검증 상태 (APPROVED)
+     * @return 조건에 해당하는 사진 목록
+     */
+    List<Photo> findByUserIdAndTypeAndVerificationStatus(Long userId, Photo.PhotoType type, Photo.VerificationStatus verificationStatus);
 }

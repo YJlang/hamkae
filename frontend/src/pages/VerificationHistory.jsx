@@ -8,10 +8,20 @@ import { getAddressFromCoords } from '../lib/mapUtils'; // mapUtils에서 주소
 
 const VerificationHistory = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, username: authUsername } = useAuth();
   const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // 사용자명 결정 함수 (Mypage.jsx와 동일한 로직)
+  const getDisplayName = () => {
+    // 1순위: useAuth의 username (로그인 시 저장된 값)
+    if (authUsername) {
+      return authUsername;
+    }
+    // 2순위: 기본값
+    return '사용자';
+  };
 
   useEffect(() => {
     if (!token) {
@@ -390,10 +400,7 @@ const VerificationHistory = () => {
       </div>
 
       {/* 본문 */}
-      <div className="flex-none overflow-auto bg-white rounded-t-[20px] -mt-10 px-6 pt-8 pb-10 shadow-md">
-        인증내역
-      </div>
-      <div className="flex-1 overflow-auto bg-white px-6 pt-4 pb-4">
+      <div className="flex-1 overflow-auto bg-white px-6 pt-8 pb-4">
         {verifications.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📸</div>
