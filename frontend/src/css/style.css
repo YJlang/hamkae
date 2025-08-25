@@ -1,5 +1,3 @@
-
-
 @media (min-width: 375px) {
   .App {
     width: 375px;
@@ -18,14 +16,12 @@
   display: none;
 }
 
-.App {
-  min-height: 100vh;
-}
-
 body {
     display: flex;
     justify-self: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
+    /* flexbox를 추가하여 내부 요소가 유동적으로 공간을 차지하게 만듭니다. */
+    flex-direction: column;
 }

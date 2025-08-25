@@ -373,20 +373,27 @@ const VerificationHistory = () => {
   return (
     <div className="flex flex-col min-h-screen font-sans max-w-[375px] mx-auto" style={{ backgroundColor: '#73C03F' }}>
       {/* 상단 헤더 */}
-      <div className="flex-none relative px-6 pt-6 pb-14 text-white h-[120px]">
+      <div className="flex-none relative px-6 pt-6 pb-14 text-white h-[140px]">
+        <h1 className="absolute top-7 left-7 flex items-center gap-1">
+          <span className="text-[28px] font-extrabold tracking-tight">
+            {getDisplayName()}
+          </span>
+          <span className="text-[14px] font-normal">님</span>
+        </h1>
         <button 
           onClick={() => navigate(-1)} 
-          className="absolute top-6 left-6 text-white text-xl"
+          className="absolute top-2 left-2 text-white text-xl"
         >
           ←
         </button>
-        <h1 className="absolute top-6 left-1/2 transform -translate-x-1/2 text-xl font-bold">
-          인증 내역
-        </h1>
+        <img src="/logo.svg" alt="logo" className="absolute top-6 right-6 w-20 h-20" />
       </div>
 
       {/* 본문 */}
-      <div className="flex-1 overflow-auto bg-white rounded-t-[28px] -mt-10 px-6 pt-8 pb-24 shadow-md">
+      <div className="flex-none overflow-auto bg-white rounded-t-[20px] -mt-10 px-6 pt-8 pb-24 shadow-md">
+        인증내역
+      </div>
+      <div className="flex-1 overflow-auto bg-white px-6 pt-4 pb-4">
         {verifications.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📸</div>
