@@ -285,7 +285,7 @@ const VerificationHistory = () => {
     const reasoning = parsedResponse.reasoning;
     
     return (
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 mb-2 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 my-2 shadow-sm">
         <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
           <span className="text-base">🤖</span>
           AI 검증 결과

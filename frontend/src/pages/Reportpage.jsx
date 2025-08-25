@@ -263,6 +263,8 @@ const Reportpage = () => {
             };
             console.log("🗺️ 맵으로 전달할 마커 데이터:", markerToPass);
             
+            // 스크롤을 맨 위로 리셋하고 맵 페이지로 이동
+            window.scrollTo(0, 0);
             navigate("/map", { state: { newMarker: markerToPass } });
         } catch (err) {
             console.error("❌ 제보 중 오류 발생:", err);

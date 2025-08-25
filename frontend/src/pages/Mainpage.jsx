@@ -39,25 +39,25 @@ const Mainpage = () => {
         {
             id: 1,
             title: "안양시 만안구 성결대학교 44",
-            address: "내 집 앞 쓰레기...",
-            imageUrl: "/6.png",
-            point: 100,
+            address: "내 집 앞 쓰레기",
+            imageUrl: "/6.jpg",
+            point: 5000,
             distance: 8, // m 단위 예시
         },
         {
             id: 2,
-            title: "경기도 안양시 동안구 관양동 53",
+            title: "서울특별시 서초구 강남대로 22",
             address: "골목가 쓰레기 더미",
             imageUrl: "sample/tresh-1.jpg",
-            point: 100,
+            point: 5000,
             distance: 25,
         },
         {
             id: 3,
-            title: "경기도 안양시 만안구 성결…",
+            title: "서울특별시 양재동 232",
             address: "계단 앞 무단투기",
-            imageUrl: "/14.png",
-            point: 100,
+            imageUrl: "/14.jpg",
+            point: 5000,
             distance: 5,
         },
     ];
@@ -91,12 +91,12 @@ const Mainpage = () => {
                         alt="hero"
                         className="w-full object-cover"
                     />
-                    <img src='/hamkae-earth.png' alt='hamkae' className='absolute z-50 top-6 right-50 '/>
+                    <img src='/hamkae-earth.png' alt='hamkae' className='absolute z-50 top-10 right-50 '/>
                     
                     //김혜린 수정 2025-08-23 
                     //로그아웃 버튼 위로 옮김 
                     {/* 인사 카드 */}
-                    <div className="absolute -bottom-70 w-full flex justify-center">
+                    <div className="absolute -bottom-60 w-full flex justify-center">
                         <div className="bg-white rounded-t-3xl p-6 w-full max-w-lg">
                                 <div className="border-2 border-[#73C03F] rounded-2xl py-2 px-4 text-center font-semibold">
                                     반갑습니다. {displayName || '사용자'}님

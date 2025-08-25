@@ -125,6 +125,18 @@ const Login = ({ onLoginSuccess }) => {
 
                         {/* 버튼 */}
                         <div className="mt-6 grid grid-cols-2 gap-3">
+                        <button
+                            className="py-3 rounded-full bg-[#A2D07A] text-white font-bold 
+                            transition-all duration-200
+                            hover:bg-[#89C25A] hover:shadow-md
+                            active:scale-95
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A2D07A]
+                            focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            type="button"
+                            onClick={() => navigate("/Register")}
+                            >
+                            회원가입
+                            </button>
                             <button
                             className="py-3 rounded-full bg-[#73C03F] text-white font-bold
                             transition-all duration-200
@@ -136,18 +148,6 @@ const Login = ({ onLoginSuccess }) => {
                             disabled={loading}
                             >
                             {loading ? '로그인 중...' : '로그인'}
-                            </button>
-                            <button
-                            className="py-3 rounded-full bg-[#A2D07A] text-white font-bold 
-                            transition-all duration-200
-                            hover:bg-[#89C25A] hover:shadow-md
-                            active:scale-95
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A2D07A]
-                            focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                            type="button"
-                            onClick={() => navigate("/Register")}
-                            >
-                            회원가입
                             </button>  
                             </div>
                         </form>

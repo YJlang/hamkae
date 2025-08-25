@@ -115,7 +115,7 @@ const PointExchange = () => {
                 <div className="grid grid-cols-3 text-[#73C03F] font-semibold text-xs py-3 px-3 text-center border-b border-[#73C03F]">
                     <div>전환날짜</div> {/* 날짜 */}
                     <div>전환포인트</div> {/* 포인트 */}
-                    <div>잔여포인트</div> {/* 타입 */}
+                    <div>포인트상태</div> {/* 타입 */}
                 </div>
 
                 {/* 데이터 행 */}

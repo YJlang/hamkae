@@ -174,7 +174,7 @@ const Uploadpage = () => {
       await performAIVerification();
     } catch (error) {
       console.error('업로드 실패:', error);
-      alert('업로드 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+      alert('업로드 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsUploading(false);
     }
@@ -239,7 +239,7 @@ const Uploadpage = () => {
         console.log('GPT 응답:', verificationData.gptResponse);
         
         if (result === 'APPROVED') {
-          alert('🎉 AI 검증 성공! 100포인트가 적립되었습니다.\n\n청소 완료된 마커는 지도에서 숨겨집니다.');
+          alert('🎉 AI 검증 성공! 5000포인트가 적립되었습니다.');
           
           // 성공한 마커 상태 변경
           await updateMarkerStatus();

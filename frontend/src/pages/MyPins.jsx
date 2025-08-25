@@ -212,7 +212,6 @@ const MyPins = () => {
           </button>
           <h1 className="text-[28px] font-extrabold tracking-tight">내 핀번호</h1>
         </div>
-        <p className="text-sm opacity-90 mt-2">온누리 상품권 핀번호 관리</p>
       </div>
 
       {/* 본문 */}

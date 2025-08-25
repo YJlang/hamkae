@@ -229,7 +229,7 @@ const Introduce = () => {
                         <p className="mb-4 font-bold text-lg">
                             소개글을 보시겠습니까?
                         </p>
-                        <label className="flex items-center space-x-2 mb-4">
+                        <label className="flex items-center justify-center space-x-2 mb-4">
                             <input
                                 type="checkbox"
                                 checked={checked}

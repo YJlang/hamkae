@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 import "./css/style.css";
 import { AuthProvider } from './lib/authContext.jsx';
@@ -18,10 +18,22 @@ import PointExchange from './pages/PointExchange';
 import TestPage from './pages/TestPage';
 import MyPins from './pages/MyPins';
 
+// 페이지 전환 시 스크롤을 맨 위로 리셋하는 컴포넌트
+function ScrollToTop() {
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
+
+    return null;
+}
+
 function App() {
     return (
         <AuthProvider>
             <div className="App">
+                <ScrollToTop />
                 <Routes>
                     {/* 테스트 페이지 - 문제 진단용 */}
                     <Route path="/test" element={<TestPage />} />
